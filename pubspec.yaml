@@ -18,7 +18,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.12.0 <3.0.0"
+  sdk: '>=3.0.6 <4.0.0'
 
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
@@ -30,27 +30,25 @@ dependencies:
   flutter:
     sdk: flutter
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^0.1.2
+  cupertino_icons: ^1.0.5
   # Service locator
-  get_it: ^2.0.1
+  get_it: ^7.6.0
   # Bloc for state management
-  flutter_bloc: ^3.2.0
+  flutter_bloc: ^8.1.3
   # Value equality
-  equatable: ^0.4.0
+  equatable: ^2.0.5
   # Functional programming thingies
-  dartz: ^0.8.6
+  dartz: ^0.10.1
   # Remote API
-  data_connection_checker: ^0.3.4
+  internet_connection_checker: ^1.0.0+1
   # Http calls
-  http: ^0.12.0+2
+  http: ^1.1.0
   # Local cache
-  shared_preferences: ^0.5.3+4
+  shared_preferences: ^2.2.0
   # Json annotator
-  json_annotation: ^3.0.1
+  json_annotation: ^4.8.1
   # API manager
-  chopper: ^3.0.1+1
-  #splash screen
-  splashscreen: 1.2.0
+  chopper: ^7.0.2
 
 dev_dependencies:
   flutter_test:
@@ -61,7 +59,10 @@ dev_dependencies:
   # activated in the `analysis_options.yaml` file located at the root of your
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
-  flutter_lints: ^1.0.0
+  flutter_lints: ^2.0.0
+  # flutter pub run build_runner build --delete-conflicting-outputs
+  build_runner: ^2.4.6
+  chopper_generator: ^7.0.1
 
 
 # For information on the generic Dart part of this file, see the
