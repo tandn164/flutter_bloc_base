@@ -1,3 +1,5 @@
+import 'package:injectable/injectable.dart';
+import '../auth_callbacks.dart';
 import 'package:auth_domain/auth_domain.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -37,10 +39,11 @@ class SignupState extends Equatable {
   List<Object?> get props => [busy, notice];
 }
 
+@injectable
 class SignupBloc extends Bloc<SignupEvent, SignupState> {
   SignupBloc({
     required SignupUseCase signup,
-    required Future<void> Function(TokenPair tokens) onAuthenticated,
+    @factoryParam required OnAuthenticated onAuthenticated,
   })  : _signup = signup,
         _onAuthenticated = onAuthenticated,
         super(const SignupState()) {

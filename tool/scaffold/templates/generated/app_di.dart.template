@@ -1,16 +1,23 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
-import 'package:__name___domain/__name___domain.dart';
-import 'package:__name___data/__name___data.dart';
+import 'package:__name___domain/di/__name___domain_di.module.dart';
+import 'package:__name___data/di/__name___data_di.module.dart';
+import 'package:__name___presentation/di/__name___presentation_di.module.dart';
 import '__name___di.config.dart';
 
-@InjectableInit(initializerName: 'init__Pascal__Feature', generateForDir: ['lib/app/features/__name__'])
-void configure__Pascal__Dependencies(GetIt container) => container.init__Pascal__Feature();
+Future<void> register__Pascal__Dependencies(GetIt sl, {String environment = 'local'}) =>
+    configure__Pascal__Dependencies(sl, environment: environment);
 
-@module
-abstract class __Pascal__Module {
-  @lazySingleton
-  __Pascal__Repository repository() => const __Pascal__RepositoryImpl();
-  @lazySingleton
-  List__Pascal__Items listItems(__Pascal__Repository repository) => List__Pascal__Items(repository);
+@InjectableInit(
+  initializerName: 'init__Pascal__Feature',
+  generateForDir: ['lib/app/features/__name__'],
+  includeMicroPackages: false,
+  externalPackageModulesBefore: [
+    ExternalModule(__Pascal__DataPackageModule),
+    ExternalModule(__Pascal__DomainPackageModule),
+    ExternalModule(__Pascal__PresentationPackageModule),
+  ],
+)
+Future<void> configure__Pascal__Dependencies(GetIt container, {String environment = 'local'}) async {
+  await container.init__Pascal__Feature(environment: environment);
 }

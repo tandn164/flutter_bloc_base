@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Remove features/<name> and optionally unwire it from an app manifest.
+# Remove feature packages and optionally unwire app DI and router.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -48,7 +48,7 @@ fi
 if [[ "$CONFIRM" != "1" ]]; then
   cat <<EOF
 This will permanently delete features/${NAME} and remove workspace entries.
-$( [[ "$WIRE" == "1" ]] && echo "It will also unwire apps/${APP} (adapter, pubspec, manifest, boundary test)." )
+$( [[ "$WIRE" == "1" ]] && echo "It will also unwire apps/${APP} (adapter, pubspec, di.dart, app_router.dart, boundary test)." )
 
 Run with confirmation:
   CONFIRM=1 make delete-feature NAME=${NAME} APP=${APP}
@@ -66,6 +66,7 @@ info() { echo "==> $*"; }
 
 if [[ "$WIRE" == "1" ]]; then
   info "unwire apps/$APP"
+  python3 "$ROOT/tool/scaffold/wire_feature.py" unwire "$APP_DIR" "$NAME" "$PASCAL" public
   remove_pubspec_dependency "$APP_DIR/pubspec.yaml" "${NAME}_domain"
   remove_pubspec_dependency "$APP_DIR/pubspec.yaml" "${NAME}_data"
   remove_pubspec_dependency "$APP_DIR/pubspec.yaml" "${NAME}_presentation"
@@ -77,43 +78,12 @@ if [[ "$WIRE" == "1" ]]; then
   fi
   # Generated companion files belong to this explicitly selected feature only.
   rm -f "$APP_DIR/lib/app/features/${NAME}_feature.g.dart"
+  rm -f "$APP_DIR/lib/app/features/$NAME/${NAME}_routes.dart" \
+    "$APP_DIR/lib/app/features/$NAME/${NAME}_routes.g.dart"
   rm -f "$APP_DIR/lib/app/features/$NAME/${NAME}_di.dart" \
     "$APP_DIR/lib/app/features/$NAME/${NAME}_di.config.dart"
   if [[ -d "$APP_DIR/lib/app/features/$NAME" ]]; then
     rmdir "$APP_DIR/lib/app/features/$NAME" 2>/dev/null || true
-  fi
-
-  MANIFEST="$APP_DIR/lib/app/features/${APP}_features.dart"
-  if [[ ! -f "$MANIFEST" ]]; then
-    MANIFEST="$(find "$APP_DIR/lib/app/features" -maxdepth 1 -name '*_features.dart' | head -n1)"
-  fi
-  if [[ -n "$MANIFEST" && -f "$MANIFEST" ]]; then
-    info "update feature manifest $(basename "$MANIFEST")"
-    python3 - <<'PY' "$MANIFEST" "$NAME" "$PASCAL"
-import pathlib
-import re
-import sys
-
-path = pathlib.Path(sys.argv[1])
-name, pascal = sys.argv[2], sys.argv[3]
-lines = path.read_text().splitlines()
-filtered = []
-for line in lines:
-    stripped = line.strip()
-    if stripped == f"import '{name}_feature.dart';":
-        continue
-    if stripped == f"register{pascal}Dependencies(sl);":
-        continue
-    if stripped == f"...create{pascal}Routes(sl),":
-        continue
-    if stripped == f"create{pascal}Branch(sl),":
-        continue
-    filtered.append(line)
-
-text = "\n".join(filtered) + "\n"
-text = re.sub(r"\n{3,}", "\n\n", text)
-path.write_text(text)
-PY
   fi
 
   BOUNDARY_TEST="$APP_DIR/test/app/package_boundary_test.dart"

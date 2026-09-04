@@ -1,9 +1,11 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 
 import '../api/profile_api.dart';
 import '../chopper_result.dart';
 import '../dtos/user_profile_dto.dart';
 
+@LazySingleton(env: ['remote'])
 class ProfileNetworkDs {
   ProfileNetworkDs(this._api);
 

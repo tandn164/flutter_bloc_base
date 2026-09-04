@@ -1,9 +1,11 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 
 import '../api/auth_api.dart';
 import '../chopper_result.dart';
 import '../dtos/token_pair_dto.dart';
 
+@LazySingleton(env: ['remote'])
 class AuthNetworkDs {
   AuthNetworkDs(this._api);
 

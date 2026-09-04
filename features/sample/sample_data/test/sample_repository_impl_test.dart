@@ -1,6 +1,10 @@
 import 'package:api_client/api_client.dart';
 import 'package:app_result/app_result.dart';
 import 'package:sample_data/sample_data.dart';
+import 'package:sample_data/di/sample_data_di.module.dart';
+import 'package:sample_domain/sample_domain.dart';
+import 'package:get_it/get_it.dart';
+import 'package:injectable/injectable.dart' show GetItHelper;
 import 'package:test/test.dart';
 
 class _CountingTransport implements ApiTransport {
@@ -56,6 +60,17 @@ void main() {
       ),
       isNotNull,
     );
+  });
+
+  test('remote DI selects network repository without the local binding', () async {
+    final sl = GetIt.asNewInstance();
+    addTearDown(sl.reset);
+    sl.registerSingleton<DataGateway>(repo.gateway);
+    await SampleDataPackageModule().init(GetItHelper(sl, 'remote'));
+    expect(sl<SampleRepository>(), isA<SampleRepositoryImpl>());
+    final result = await sl<SampleRepository>().getSample();
+    expect(result.valueOrNull?.items.single.title, 'A');
+    expect(transport.calls, 1);
   });
 
   test('cache hit does not call network', () async {

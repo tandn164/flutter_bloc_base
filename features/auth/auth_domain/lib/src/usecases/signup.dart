@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 
 import '../entities/token_pair.dart';
 import '../repositories/auth_repository.dart';
 
+@lazySingleton
 class SignupUseCase {
   SignupUseCase(this._repository);
 

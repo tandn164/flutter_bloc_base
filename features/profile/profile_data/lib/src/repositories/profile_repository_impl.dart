@@ -1,11 +1,16 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 import 'package:profile_domain/profile_domain.dart';
 
 import '../api/profile_api.dart';
 import '../datasources/profile_network_ds.dart';
 
+@LazySingleton(as: ProfileRepository, env: ['remote'])
 class ProfileRepositoryImpl implements ProfileRepository {
   ProfileRepositoryImpl(ProfileApi api) : _network = ProfileNetworkDs(api);
+
+  @factoryMethod
+  ProfileRepositoryImpl.fromNetwork(this._network);
 
   final ProfileNetworkDs _network;
 

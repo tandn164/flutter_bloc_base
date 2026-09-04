@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 
 import '../entities/sample_chunk.dart';
 import '../repositories/sample_repository.dart';
 
+@lazySingleton
 class GetSample {
   GetSample(this._repository);
 

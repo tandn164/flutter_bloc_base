@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:equatable/equatable.dart';
 import 'package:sample_domain/sample_domain.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -84,6 +85,7 @@ sealed class SampleState with _$SampleState {
       SampleError;
 }
 
+@injectable
 class SampleBloc extends Bloc<SampleEvent, SampleState> {
   SampleBloc({
     required GetSample getSample,

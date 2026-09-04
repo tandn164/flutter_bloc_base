@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 
 import '../entities/sample_item.dart';
 import '../repositories/sample_repository.dart';
 
+@lazySingleton
 class CreateSampleItem {
   CreateSampleItem(this._repository);
 
@@ -13,6 +15,7 @@ class CreateSampleItem {
   }
 }
 
+@lazySingleton
 class UpdateSampleItem {
   UpdateSampleItem(this._repository);
 
@@ -27,6 +30,7 @@ class UpdateSampleItem {
   }
 }
 
+@lazySingleton
 class DeleteSampleItem {
   DeleteSampleItem(this._repository);
 

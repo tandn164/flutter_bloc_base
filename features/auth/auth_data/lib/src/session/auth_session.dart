@@ -1,9 +1,24 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_session/app_session.dart';
 import 'package:flutter/foundation.dart';
 
 import 'token_refresher.dart';
 import 'token_vault.dart';
 
+/// App-owned session policy; no storage or network implementation is selected here.
+class AuthSessionConfig {
+  const AuthSessionConfig({
+    this.guestAllowed = true,
+    this.restoreDelay = const Duration(milliseconds: 400),
+  });
+
+  final bool guestAllowed;
+  final Duration restoreDelay;
+}
+
+void disposeAuthSession(Session session) => (session as AuthSession).dispose();
+
+@LazySingleton(as: Session, env: ['remote'], dispose: disposeAuthSession)
 class AuthSession extends ChangeNotifier implements Session {
   AuthSession({
     required this.vault,
@@ -11,6 +26,15 @@ class AuthSession extends ChangeNotifier implements Session {
     this.guestAllowed = true,
     this.restoreDelay = const Duration(milliseconds: 400),
   });
+
+  @factoryMethod
+  static AuthSession create(TokenVault vault, TokenRefresher refresher,
+          AuthSessionConfig config) =>
+      AuthSession(
+          vault: vault,
+          refresher: refresher,
+          guestAllowed: config.guestAllowed,
+          restoreDelay: config.restoreDelay);
 
   final TokenVault vault;
   final TokenRefresher refresher;
@@ -97,7 +121,9 @@ class AuthSession extends ChangeNotifier implements Session {
     _refresh = null;
     await vault.clear();
     _set(SessionState(
-      status: guestAllowed && !kick ? SessionStatus.guest : SessionStatus.unauthenticated,
+      status: guestAllowed && !kick
+          ? SessionStatus.guest
+          : SessionStatus.unauthenticated,
     ));
   }
 
@@ -113,7 +139,8 @@ class AuthSession extends ChangeNotifier implements Session {
     if (token == null || token.isEmpty) return false;
     final pair = await refresher.refresh(token);
     if (pair == null) return false;
-    await _persist(accessToken: pair.accessToken, refreshToken: pair.refreshToken);
+    await _persist(
+        accessToken: pair.accessToken, refreshToken: pair.refreshToken);
     return true;
   }
 }

@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:api_client/api_client.dart';
 import 'package:app_result/app_result.dart';
 import 'package:auth_domain/auth_domain.dart';
@@ -5,6 +6,7 @@ import 'package:auth_domain/auth_domain.dart';
 import '../api/auth_api.dart';
 import 'token_refresher.dart';
 
+@LazySingleton(as: TokenRefresher, env: ['remote'])
 class ApiTokenRefresher implements TokenRefresher {
   ApiTokenRefresher(this._transport);
 
@@ -13,7 +15,8 @@ class ApiTokenRefresher implements TokenRefresher {
   @override
   Future<TokenPair?> refresh(String refreshToken) {
     final client = ApiClient(transport: _transport);
-    return client.sendDecoded(
+    return client
+        .sendDecoded(
       request: ApiRequest(
         method: 'POST',
         path: AuthApi.refreshPath,
@@ -26,7 +29,8 @@ class ApiTokenRefresher implements TokenRefresher {
           refreshToken: map['refreshToken'] as String? ?? refreshToken,
         );
       },
-    ).then((result) {
+    )
+        .then((result) {
       return result.fold(
         ok: (pair) => pair,
         err: (failure) {

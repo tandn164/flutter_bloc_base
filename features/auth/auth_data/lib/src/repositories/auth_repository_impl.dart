@@ -1,11 +1,16 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 import 'package:auth_domain/auth_domain.dart';
 
 import '../api/auth_api.dart';
 import '../datasources/auth_network_ds.dart';
 
+@LazySingleton(as: AuthRepository, env: ['remote'])
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(AuthApi api) : _network = AuthNetworkDs(api);
+
+  @factoryMethod
+  AuthRepositoryImpl.fromNetwork(this._network);
 
   final AuthNetworkDs _network;
 

@@ -18,3 +18,10 @@ must deduplicate repeated keys.
 dart run build_runner build --delete-conflicting-outputs
 dart test features/sample/sample_data
 ```
+
+## Dependency injection
+
+Annotations on classes generate `lib/di/sample_data_di.module.dart`.
+The app selects this module explicitly; importing the package does not register
+anything. Constructors remain usable directly in tests. See the
+[DI guide](../../../tool/DEPENDENCY_INJECTION.md) for configuration and lifetimes.

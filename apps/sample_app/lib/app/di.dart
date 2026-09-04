@@ -10,8 +10,10 @@ import 'package:tutorial_engine/tutorial_engine.dart';
 
 import 'config/app_config.dart';
 import 'config/app_env.dart';
-import 'features/sample_features.dart';
+import 'features/sample/sample_di.dart';
+import 'features/onboarding/onboarding_di.dart';
 import 'router/app_router.dart';
+// scaffold:feature-imports
 
 final sl = GetIt.instance;
 
@@ -33,7 +35,9 @@ Future<void> register() async {
     ..registerSingleton<LogSink>(log)
     ..registerSingleton<LogReader>(log);
 
-  registerSampleFeatureDependencies(sl);
+  await registerSampleDependencies(sl);
+  await registerOnboardingDependencies(sl);
+  // scaffold:feature-registrations
   _registerOverlay();
 }
 

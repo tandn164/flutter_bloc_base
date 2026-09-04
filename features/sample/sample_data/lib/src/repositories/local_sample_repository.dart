@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 import 'package:sample_domain/sample_domain.dart';
 
@@ -5,11 +6,15 @@ import 'package:sample_domain/sample_domain.dart';
 ///
 /// Product apps should bind [SampleRepository] to their own server or database
 /// implementation. This implementation deliberately has no HTTP dependency.
+@LazySingleton(as: SampleRepository, env: ['local'])
 class LocalSampleRepository implements SampleRepository {
   LocalSampleRepository({
     this.latency = const Duration(milliseconds: 250),
     Iterable<SampleItem>? initialItems,
   }) : _items = List.of(initialItems ?? _seedItems());
+
+  @factoryMethod
+  static LocalSampleRepository create() => LocalSampleRepository();
 
   final Duration latency;
   final List<SampleItem> _items;

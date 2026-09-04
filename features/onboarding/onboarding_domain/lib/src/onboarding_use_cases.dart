@@ -1,5 +1,7 @@
+import 'package:injectable/injectable.dart';
 import 'onboarding_repository.dart';
 
+@lazySingleton
 class ShouldShowOnboarding {
   const ShouldShowOnboarding(this.repository);
   final OnboardingRepository repository;
@@ -8,6 +10,7 @@ class ShouldShowOnboarding {
       !await repository.isCompleted(flowId);
 }
 
+@lazySingleton
 class CompleteOnboarding {
   const CompleteOnboarding(this.repository);
   final OnboardingRepository repository;

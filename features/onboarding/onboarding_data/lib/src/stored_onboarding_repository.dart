@@ -1,9 +1,15 @@
+import 'package:injectable/injectable.dart';
 import 'package:local_storage/local_storage.dart';
 import 'package:onboarding_domain/onboarding_domain.dart';
 
+@LazySingleton(as: OnboardingRepository, env: ['local'])
 class StoredOnboardingRepository implements OnboardingRepository {
   const StoredOnboardingRepository(this.store,
       {this.keyPrefix = 'onboarding.'});
+
+  @factoryMethod
+  static StoredOnboardingRepository create(KeyValueStore store) =>
+      StoredOnboardingRepository(store);
 
   final KeyValueStore store;
   final String keyPrefix;

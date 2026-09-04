@@ -82,6 +82,102 @@ void _assertPresentationNotData(String feature) {
 }
 
 void main() {
+  test('every dependency-owning feature package has generated package DI', () {
+    for (final spec in Directory(ws('features'))
+        .listSync(recursive: true)
+        .whereType<File>()
+        .where((file) =>
+            file.path.endsWith('/pubspec.yaml') &&
+            !file.path.contains('/.dart_tool/'))) {
+      final package = spec.parent;
+      final name =
+          package.uri.pathSegments.where((part) => part.isNotEmpty).last;
+      final lib = Directory('${package.path}/lib');
+      if (!lib.existsSync()) continue;
+      final sources = lib.listSync(recursive: true).whereType<File>().where(
+          (file) =>
+              file.path.endsWith('.dart') &&
+              !file.path.endsWith('.module.dart'));
+      final hasServices = sources.any((file) =>
+          RegExp(r'@(injectable|lazySingleton|LazySingleton)')
+              .hasMatch(file.readAsStringSync()));
+      // Domain and Data own services in every feature; Presentation needs a
+      // module only when it owns BLoCs/services, not for plain widgets.
+      if (name.endsWith('_domain') || name.endsWith('_data') || hasServices) {
+        final initializer = File('${lib.path}/di/${name}_di.dart');
+        expect(initializer.existsSync(), isTrue, reason: name);
+        expect(
+            initializer
+                .readAsStringSync()
+                .contains('@InjectableInit.microPackage('),
+            isTrue,
+            reason: name);
+        expect(
+            File('${lib.path}/di/${name}_di.module.dart').existsSync(), isTrue,
+            reason: name);
+      }
+      for (final file in sources.where((f) =>
+          f.path.contains('/usecases/') ||
+          f.path.endsWith('_use_cases.dart') ||
+          f.path.endsWith('_bloc.dart'))) {
+        final source = file.readAsStringSync();
+        final classes = RegExp(r'class\s+(\w+)').allMatches(source);
+        for (final declaration in classes) {
+          final className = declaration.group(1)!;
+          if (file.path.endsWith('_bloc.dart') && !className.endsWith('Bloc')) {
+            continue; // Events/states are values, not DI services.
+          }
+          expect(
+              RegExp('@(injectable|lazySingleton)\\s+class\\s+$className\\b')
+                  .hasMatch(source),
+              isTrue,
+              reason: '${file.path}: $className must declare its DI lifetime');
+        }
+      }
+    }
+  });
+
+  test(
+      'app feature wiring stays in feature folders with separate DI and routes',
+      () {
+    final root = Directory('lib/app/features');
+    expect(
+        root
+            .listSync()
+            .whereType<File>()
+            .where((f) => f.path.endsWith('.dart')),
+        isEmpty);
+    for (final folder in root.listSync().whereType<Directory>()) {
+      final name =
+          folder.uri.pathSegments.where((part) => part.isNotEmpty).last;
+      final routes = File('${folder.path}/${name}_routes.dart');
+      expect(routes.existsSync(), isTrue, reason: folder.path);
+      expect(
+          routes.readAsStringSync().contains('registerLazySingleton'), isFalse);
+      final di = File('${folder.path}/${name}_di.dart');
+      if (di.existsSync()) {
+        expect(di.readAsStringSync().contains('package:go_router/'), isFalse);
+        expect(di.readAsStringSync().contains('_routes.dart'), isFalse);
+        final source = di.readAsStringSync();
+        expect(source.contains('@InjectableInit('), isTrue, reason: di.path);
+        expect(source.contains("generateForDir: ['lib/app/features/$name']"),
+            isTrue,
+            reason: di.path);
+        expect(source.contains('includeMicroPackages: false'), isTrue,
+            reason: di.path);
+        expect(source.contains('ExternalModule('), isTrue, reason: di.path);
+        expect(source.contains('@module'), isFalse,
+            reason: 'Internal bindings belong in packages');
+        expect(
+            RegExp(r'\.register(?:LazySingleton|Singleton|Factory)')
+                .hasMatch(source),
+            isFalse,
+            reason: 'Use Injectable annotations in ${di.path}');
+        expect(
+            File('${folder.path}/${name}_di.config.dart').existsSync(), isTrue);
+      }
+    }
+  });
   test('no lib/features directory under sample_app', () {
     expect(Directory('lib/features').existsSync(), isFalse);
   });

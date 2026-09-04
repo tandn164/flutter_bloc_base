@@ -90,7 +90,9 @@ Created apps/${NAME} from apps/${SOURCE}.
 Next:
   make init APP=${NAME}
   make run APP=${NAME} FLAVOR=dev
-  Trim apps/${NAME}/lib/app/features/${NAME}_features.dart to your feature set
+  Select dependencies in apps/${NAME}/lib/app/di.dart
+  Select routes/tabs in apps/${NAME}/lib/app/router/app_router.dart
+  Align tab destinations in apps/${NAME}/lib/app/router/app_shell.dart
   Update Android applicationId / iOS bundle id if this is a separate product
 
 EOF

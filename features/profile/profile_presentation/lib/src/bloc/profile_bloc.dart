@@ -1,3 +1,5 @@
+import 'package:injectable/injectable.dart';
+import '../profile_callbacks.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:profile_domain/profile_domain.dart';
@@ -70,11 +72,12 @@ class ProfileError extends ProfileState {
   List<Object?> get props => [message, busy, notice];
 }
 
+@injectable
 class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
   ProfileBloc({
     required GetProfile getProfile,
     required UpdateProfile updateProfile,
-    required Future<void> Function() onSignOut,
+    @factoryParam required OnProfileSignOut onSignOut,
   })  : _getProfile = getProfile,
         _updateProfile = updateProfile,
         _onSignOut = onSignOut,
@@ -143,7 +146,8 @@ class ProfileBloc extends Bloc<ProfileEvent, ProfileState> {
     }
   }
 
-  Future<void> _signOut(ProfileSignedOut event, Emitter<ProfileState> emit) async {
+  Future<void> _signOut(
+      ProfileSignedOut event, Emitter<ProfileState> emit) async {
     await _onSignOut();
   }
 }

@@ -12,6 +12,7 @@ FLAVOR    ?= dev
 WIRE      ?= 1
 ROUTE_KIND ?= public
 SOURCE    ?= sample_app
+TYPE      ?= dart
 FLUTTER   := fvm flutter
 DART      := fvm dart
 DART_DEFINES := --dart-define=FLAVOR=$(FLAVOR)
@@ -39,6 +40,8 @@ help:
 	@echo "  make new-feature NAME=orders [APP=sample_app] [ROUTE_KIND=public|tab]"
 	@echo "  make delete-feature NAME=orders [APP=sample_app] CONFIRM=1"
 	@echo "  make new-app NAME=merchant_app [SOURCE=sample_app]"
+	@echo "  make new-shared NAME=my_service [TYPE=dart|flutter]"
+	@echo "  make delete-shared NAME=my_service CONFIRM=1 (refuses dependents; keeps backup)"
 	@echo "  make delete-app NAME=merchant_app CONFIRM=1"
 	@echo "  make adopt-project PACKAGE=acme_merchant TITLE=\"Acme Merchant\" CONFIRM=1"
 	@echo "  make clean      flutter clean in apps/\$$APP"
@@ -105,3 +108,10 @@ delete-app:
 adopt-project:
 	@test -n "$(PACKAGE)" || (echo "error: PACKAGE is required (e.g. make adopt-project PACKAGE=acme_merchant CONFIRM=1)" >&2; exit 1)
 	@PACKAGE="$(PACKAGE)" TITLE="$(TITLE)" CONFIRM="$(CONFIRM)" bash tool/adopt_project.sh
+
+.PHONY: new-shared delete-shared
+new-shared:
+	@NAME="$(NAME)" TYPE="$(TYPE)" bash tool/scaffold/new_shared.sh
+
+delete-shared:
+	@NAME="$(NAME)" CONFIRM="$(CONFIRM)" bash tool/scaffold/delete_shared.sh

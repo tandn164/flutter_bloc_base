@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 bash tool/codegen_all.sh
-patterns=('*.g.dart' '*.freezed.dart' '*.config.dart' '*.chopper.dart')
+patterns=('*.g.dart' '*.freezed.dart' '*.config.dart' '*.module.dart' '*.chopper.dart')
 git diff --exit-code HEAD -- "${patterns[@]}" || {
   echo 'Generated code is stale. Run make codegen and commit the generated changes.' >&2
   exit 1

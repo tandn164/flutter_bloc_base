@@ -3,10 +3,9 @@ import 'package:get_it/get_it.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/widgets.dart';
 import 'package:sample_presentation/sample_presentation.dart';
-import 'sample/sample_di.dart';
-import '../di.dart' as app_di;
+import '../../di.dart' as app_di;
 
-part 'sample_feature.g.dart';
+part 'sample_routes.g.dart';
 
 @TypedGoRoute<SampleRoute>(path: '/sample')
 class SampleRoute extends GoRouteData {
@@ -15,10 +14,6 @@ class SampleRoute extends GoRouteData {
   @override
   Widget build(BuildContext context, GoRouterState state) =>
       buildSamplePage(context, app_di.sl);
-}
-
-void registerSampleDependencies(GetIt sl) {
-  configureSampleDependencies(sl);
 }
 
 StatefulShellBranch createSampleBranch(GetIt sl) {
@@ -35,12 +30,7 @@ StatefulShellBranch createSampleBranch(GetIt sl) {
 }
 
 Widget buildSamplePage(BuildContext context, GetIt sl) => SamplePage(
-      createBloc: () => SampleBloc(
-        getSample: sl(),
-        createItem: sl(),
-        updateItem: sl(),
-        deleteItem: sl(),
-      )..add(const SampleStarted()),
+      createBloc: () => sl<SampleBloc>()..add(const SampleStarted()),
       onNotice: (context, notice) {
         OverlayScope.of(context).showToast(
           type: notice.kind == SampleNoticeKind.error

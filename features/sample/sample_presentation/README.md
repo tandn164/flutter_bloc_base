@@ -26,3 +26,10 @@ locator.
 ```bash
 flutter test features/sample/sample_presentation
 ```
+
+## Dependency injection
+
+Annotations on classes generate `lib/di/sample_presentation_di.module.dart`.
+The app selects this module explicitly; importing the package does not register
+anything. Constructors remain usable directly in tests. See the
+[DI guide](../../../tool/DEPENDENCY_INJECTION.md) for configuration and lifetimes.

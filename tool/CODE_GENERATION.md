@@ -1,8 +1,9 @@
 # Code generation
 
-The `sample` feature demonstrates these conventions. Existing auth/profile
-features are not migrated automatically. Domain stays pure Dart: Freezed
-annotations are allowed, but JSON, GetIt and Injectable stay outside domain.
+All features (Sample, Onboarding, Auth and Profile) follow the same package DI
+convention, also used by new-feature scaffolding. Domain stays pure Dart: Freezed
+and Injectable annotations are allowed; JSON and Flutter stay outside Domain.
+Business classes use constructor injection, never GetIt lookups.
 
 ## Commands
 
@@ -17,7 +18,7 @@ Codegen discovers library packages and the selected app with a direct
 `build_runner` dependency. `build.yaml` is optional customization, not a discovery
 requirement. Watch runs one package at a time.
 
-Commit `.freezed.dart`, `.g.dart`, `.config.dart` and `.chopper.dart` outputs;
+Commit `.freezed.dart`, `.g.dart`, `.config.dart`, `.module.dart` and `.chopper.dart` outputs;
 never edit them manually. CI regenerates and rejects stale or untracked outputs.
 `codegen-check` compares against HEAD, so valid new output not yet committed also
 fails the check. Pre-commit does not regenerate the entire workspace.
@@ -35,20 +36,20 @@ See the sample entity, DTO and BLoC state under `features/sample`.
 
 ## Opt-in DI
 
-Each app feature adapter calls an Injectable initializer scoped to that feature's
-composition folder. Module methods bind interfaces and construct use cases;
-domain classes need no DI annotations. See
-`apps/sample_app/lib/app/features/sample/sample_di.dart`.
+Package classes declare Injectable annotations. Each dependency-owning package
+has a micro-package initializer under `lib/di/` and a generated `.module.dart`.
+App feature initializers explicitly select external modules with
+`includeMicroPackages: false`; they do not repeat constructor bindings.
 
-Initializers receive a GetIt container, allowing isolated tests. The app manifest
-explicitly selects initializers: disabling a feature's registration does not
-initialize it implicitly. Shared bootstrap registrations remain explicit;
-async initialization and disposal need deliberate lifecycle configuration.
+App bootstrap awaits selected initializers. All four features use the same
+convention as the scaffold. Package codegen runs before app codegen.
+See [Dependency injection](DEPENDENCY_INJECTION.md) for annotation placement,
+lifetimes, provider configuration, and replacing a repository without duplicates.
 
 ## Typed routing
 
 `SampleRoute().go(context)` and `.location` come from `@TypedGoRoute`. Declarations
-stay in separate feature adapter libraries, keeping generated route lists local.
+stay in per-feature `*_routes.dart` libraries, keeping generated route lists local.
 The sample's shell adapter uses the generated location as its static path and
 retains caller-supplied DI. The generated route's default builder uses app DI.
 Do not mount both the adapter and its generated route list simultaneously.

@@ -1,5 +1,5 @@
 name: sample_presentation
-description: Sample Flutter UI and BLoC. No GetIt. No data-layer package.
+description: Sample Flutter UI and BLoC with package DI. No data-layer dependency.
 version: 1.0.0
 publish_to: "none"
 
@@ -9,6 +9,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  injectable: ^2.5.0
+  get_it: ^8.0.3
   freezed_annotation: ^3.1.0
   flutter:
     sdk: flutter
@@ -20,6 +22,7 @@ dependencies:
     path: ../../../shared/ui_kit
 
 dev_dependencies:
+  injectable_generator: ^2.7.0
   build_runner: ^2.4.13
   freezed: 3.0.6
   flutter_lints: ^6.0.0

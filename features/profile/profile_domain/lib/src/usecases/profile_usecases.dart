@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:app_result/app_result.dart';
 
 import '../entities/user_profile.dart';
 import '../repositories/profile_repository.dart';
 
+@lazySingleton
 class GetProfile {
   GetProfile(this._repository);
 
@@ -11,6 +13,7 @@ class GetProfile {
   Future<Result<UserProfile>> execute() => _repository.me();
 }
 
+@lazySingleton
 class UpdateProfile {
   UpdateProfile(this._repository);
 

@@ -75,3 +75,5 @@ app.*.map.json
 # Keep overrides local-only if ever needed
 pubspec_overrides.yaml
 **/pubspec_overrides.yaml
+# Recoverable backups from make delete-shared.
+/.scaffold-trash/

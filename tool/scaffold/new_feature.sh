@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Scaffold features/<name>/{domain,data,presentation} and wire into an app manifest.
+# Scaffold feature packages and wire directly into app DI and router.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -26,6 +26,10 @@ fi
 
 PASCAL="$(to_pascal "$NAME")"
 FEATURE_ROOT="$ROOT/features/$NAME"
+
+if [[ "$WIRE" == "1" ]]; then
+  python3 "$ROOT/tool/scaffold/wire_feature.py" check "$APP_DIR" "$NAME" "$PASCAL" "$ROUTE_KIND"
+fi
 
 info() { echo "==> $*"; }
 
@@ -241,117 +245,8 @@ if [[ "$WIRE" == "1" ]]; then
   ensure_pubspec_dependency "$APP_DIR/pubspec.yaml" "${NAME}_data" "../../features/${NAME}/${NAME}_data"
   ensure_pubspec_dependency "$APP_DIR/pubspec.yaml" "${NAME}_presentation" "../../features/${NAME}/${NAME}_presentation"
 
-  ADAPTER="$APP_DIR/lib/app/features/${NAME}_feature.dart"
-  if [[ "$ROUTE_KIND" == "tab" ]]; then
-    cat >"$ADAPTER" <<DART
-import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
-import 'package:${NAME}_data/${NAME}_data.dart';
-import 'package:${NAME}_domain/${NAME}_domain.dart';
-import 'package:${NAME}_presentation/${NAME}_presentation.dart';
-
-void register${PASCAL}Dependencies(GetIt sl) {
-  sl
-    ..registerLazySingleton<${PASCAL}Repository>(
-      () => const ${PASCAL}RepositoryImpl(),
-    )
-    ..registerLazySingleton(() => List${PASCAL}Items(sl<${PASCAL}Repository>()));
-}
-
-StatefulShellBranch create${PASCAL}Branch(GetIt sl) {
-  return StatefulShellBranch(
-    routes: [
-      GoRoute(
-        path: '/${NAME}',
-        builder: (_, __) => const ${PASCAL}Page(),
-      ),
-    ],
-  );
-}
-DART
-  else
-    cat >"$ADAPTER" <<DART
-import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
-import 'package:${NAME}_data/${NAME}_data.dart';
-import 'package:${NAME}_domain/${NAME}_domain.dart';
-import 'package:${NAME}_presentation/${NAME}_presentation.dart';
-
-void register${PASCAL}Dependencies(GetIt sl) {
-  sl
-    ..registerLazySingleton<${PASCAL}Repository>(
-      () => const ${PASCAL}RepositoryImpl(),
-    )
-    ..registerLazySingleton(() => List${PASCAL}Items(sl<${PASCAL}Repository>()));
-}
-
-List<RouteBase> create${PASCAL}Routes(GetIt sl) {
-  return [
-    GoRoute(
-      path: '/${NAME}',
-      builder: (_, __) => const ${PASCAL}Page(),
-    ),
-  ];
-}
-DART
-  fi
-
-  MANIFEST="$APP_DIR/lib/app/features/${APP}_features.dart"
-  if [[ ! -f "$MANIFEST" ]]; then
-    MANIFEST="$(find "$APP_DIR/lib/app/features" -maxdepth 1 -name '*_features.dart' | head -n1)"
-  fi
-  if [[ -z "$MANIFEST" || ! -f "$MANIFEST" ]]; then
-    echo "warning: app feature manifest not found; skipped wiring ${APP}_features.dart" >&2
-  else
-    python3 - <<'PY' "$MANIFEST" "$NAME" "$PASCAL" "$ROUTE_KIND"
-import pathlib
-import re
-import sys
-
-path = pathlib.Path(sys.argv[1])
-name, pascal, route_kind = sys.argv[2], sys.argv[3], sys.argv[4]
-text = path.read_text()
-
-import_line = f"import '{name}_feature.dart';"
-if import_line not in text:
-    anchor = "import 'sample_feature.dart';"
-    if anchor in text:
-        text = text.replace(anchor, anchor + "\n" + import_line, 1)
-    else:
-        last = text.rfind("import '")
-        end = text.find("';", last) + 2
-        text = text[:end] + "\n" + import_line + text[end:]
-
-register = f"  register{pascal}Dependencies(sl);"
-if register not in text:
-    text = text.replace(
-        "  registerSampleDependencies(sl);\n",
-        "  registerSampleDependencies(sl);\n" + register + "\n",
-        1,
-    )
-
-if route_kind == "tab":
-    branch = f"    create{pascal}Branch(sl),"
-    if branch not in text:
-        pattern = r'(List<StatefulShellBranch>\s+create\w+ShellBranches\(GetIt sl\)\s*\{\s*return\s*\[)(.*?)(\];)'
-        def append_branch(match):
-            existing = match[2].rstrip().rstrip(',')
-            return match[1] + existing + ',\n' + branch + '\n' + match[3]
-        text, count = re.subn(pattern, append_branch, text, count=1, flags=re.S)
-        if count != 1:
-            raise SystemExit('Unable to locate shell branch manifest; wire the new feature explicitly.')
-else:
-    routes = f"    ...create{pascal}Routes(sl),"
-    if routes not in text:
-        text = text.replace(
-            "    ...createShowcaseRoutes(),\n",
-            "    ...createShowcaseRoutes(),\n" + routes + "\n",
-            1,
-        )
-
-path.write_text(text)
-PY
-  fi
+  # DI and routes are rendered once from the generated templates below.
+  python3 "$ROOT/tool/scaffold/wire_feature.py" wire "$APP_DIR" "$NAME" "$PASCAL" "$ROUTE_KIND"
 
   BOUNDARY_TEST="$APP_DIR/test/app/package_boundary_test.dart"
   if [[ -f "$BOUNDARY_TEST" ]]; then
@@ -390,12 +285,12 @@ info "generate sources"
 cat <<EOF
 
 Created features/${NAME}/ (${NAME}_domain, ${NAME}_data, ${NAME}_presentation)
-$( [[ "$WIRE" == "1" ]] && echo "Wired into apps/${APP} (adapter + pubspec + manifest)" )
+$( [[ "$WIRE" == "1" ]] && echo "Wired into apps/${APP} (adapter + pubspec + di.dart + app_router.dart)" )
 
 Next:
   make lint APP=${APP}
   make test APP=${APP}
-  Edit features/${NAME} and apps/${APP}/lib/app/features/${NAME}_feature.dart
+  Edit features/${NAME} and apps/${APP}/lib/app/features/${NAME}/
 
 Options:
   ROUTE_KIND=tab make new-feature NAME=${NAME}   # shell tab instead of public route

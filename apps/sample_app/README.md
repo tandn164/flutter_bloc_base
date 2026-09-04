@@ -7,7 +7,7 @@ of reusable business or infrastructure code.
 ## What remains app-owned
 
 - bootstrap, flavors, theme, and native projects;
-- GetIt registrations and the build-time feature manifest;
+- GetIt registrations in `lib/app/di.dart`;
 - GoRouter route names and tab order;
 - product copy and callbacks passed into feature presentation packages;
 - the capability showcase UI that triggers reusable base behavior.
@@ -29,9 +29,17 @@ local repository rather than pretending to be a backend.
 
 ## Feature selection
 
-`lib/app/features/sample_features.dart` is the only manifest listing the app's
-feature set. Per-feature adapters in the same directory own DI, routes, and
-presentation callbacks. Real providers belong in app composition or an
+Select feature dependency initializers in `lib/app/di.dart` and routes/tab
+branches in `lib/app/router/app_router.dart`. There is no separate feature
+manifest. Keep tab destinations in `app_shell.dart` aligned with branch order.
+Each feature has one folder under `lib/app/features/<name>/`:
+
+- `<name>_di.dart`: dependency registration only; imported by app `di.dart`.
+- `<name>_routes.dart`: routes, page builders and callbacks; imported by `app_router.dart`.
+- Generated `.config.dart` / `.g.dart` files live beside the source that owns them.
+
+See [feature wiring](lib/app/features/README.md) for the current layout and usage.
+Real providers belong in app composition or an
 `integrations/` adapter; the sample app does not silently replace them with
 fake implementations.
 

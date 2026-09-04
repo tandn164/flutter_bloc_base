@@ -1,3 +1,4 @@
+import 'package:injectable/injectable.dart';
 import 'package:api_client/api_client.dart';
 import 'package:app_result/app_result.dart';
 import 'package:sample_domain/sample_domain.dart';
@@ -7,6 +8,7 @@ import '../dtos/sample_item_dto.dart';
 
 /// Sample reads go through [DataGateway] so cache/TTL/offline follow [RequestPolicy].
 /// Path comes from [SampleApi] (Chopper).
+@LazySingleton(as: SampleRepository, env: ['remote'])
 class SampleRepositoryImpl implements SampleRepository {
   SampleRepositoryImpl({
     required this.gateway,
@@ -16,6 +18,10 @@ class SampleRepositoryImpl implements SampleRepository {
     ),
     String Function()? operationId,
   }) : operationId = operationId ?? _nextOperationId;
+
+  @factoryMethod
+  static SampleRepositoryImpl create(DataGateway gateway) =>
+      SampleRepositoryImpl(gateway: gateway);
 
   final DataGateway gateway;
   final RequestPolicy policy;

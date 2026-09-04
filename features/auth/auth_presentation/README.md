@@ -26,3 +26,12 @@ brand copy. Keep navigation and overlay decisions in the app adapter.
 ```bash
 flutter test features/auth/auth_presentation
 ```
+
+## Package-owned DI
+
+Classes use Injectable annotations and constructor injection. Generate
+`lib/di/auth_presentation_di.module.dart` with `make codegen APP=sample_app`.
+The app selects this module explicitly; importing this package does not register
+anything. Direct constructor usage in existing tests remains supported.
+See the [DI guide](../../../tool/DEPENDENCY_INJECTION.md) for module order,
+external providers, callback factory parameters and environment selection.

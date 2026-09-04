@@ -11,32 +11,25 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
-import 'package:sample_app/app/features/sample/sample_di.dart' as _i53;
-import 'package:sample_domain/sample_domain.dart' as _i180;
+import 'package:sample_data/di/sample_data_di.module.dart' as _i223;
+import 'package:sample_domain/di/sample_domain_di.module.dart' as _i17;
+import 'package:sample_presentation/di/sample_presentation_di.module.dart'
+    as _i791;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
-  _i174.GetIt initSampleFeature({
+  Future<_i174.GetIt> initSampleFeature({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
-  }) {
+  }) async {
     final gh = _i526.GetItHelper(
       this,
       environment,
       environmentFilter,
     );
-    final sampleModule = _$SampleModule();
-    gh.lazySingleton<_i180.SampleRepository>(() => sampleModule.repository());
-    gh.lazySingleton<_i180.GetSample>(
-        () => sampleModule.getSample(gh<_i180.SampleRepository>()));
-    gh.lazySingleton<_i180.CreateSampleItem>(
-        () => sampleModule.createItem(gh<_i180.SampleRepository>()));
-    gh.lazySingleton<_i180.UpdateSampleItem>(
-        () => sampleModule.updateItem(gh<_i180.SampleRepository>()));
-    gh.lazySingleton<_i180.DeleteSampleItem>(
-        () => sampleModule.deleteItem(gh<_i180.SampleRepository>()));
+    await _i223.SampleDataPackageModule().init(gh);
+    await _i17.SampleDomainPackageModule().init(gh);
+    await _i791.SamplePresentationPackageModule().init(gh);
     return this;
   }
 }
-
-class _$SampleModule extends _i53.SampleModule {}

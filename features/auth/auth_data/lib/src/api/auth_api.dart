@@ -1,8 +1,10 @@
+import 'package:injectable/injectable.dart';
 import 'package:chopper/chopper.dart';
 
 part 'auth_api.chopper.dart';
 
 /// Credential endpoints only. Profile `/me` lives with the profile feature.
+@LazySingleton(env: ['remote'])
 @ChopperApi()
 abstract class AuthApi extends ChopperService {
   static const loginPath = '/demo/login';
@@ -10,6 +12,9 @@ abstract class AuthApi extends ChopperService {
   static const refreshPath = '/demo/refresh';
 
   static AuthApi create([ChopperClient? client]) => _$AuthApi(client);
+
+  @factoryMethod
+  static AuthApi createForDi(ChopperClient client) => create(client);
 
   @POST(path: loginPath)
   Future<Response<dynamic>> login(@Body() Map<String, dynamic> body);

@@ -66,9 +66,10 @@ copying code out of `sample_app`.
 
 - Domain is pure Dart and owns entities, repository contracts, and use cases.
 - Data implements Domain and owns DTO/API/persistence details.
-- Presentation depends on Domain, never Data or GetIt.
+- Presentation depends on Domain, never Data; business/UI classes do not look up services through GetIt.
 - Shared packages never import business features.
-- Apps own GetIt, GoRouter, flavors, theme, native configuration, and concrete wiring.
+- Packages own generated internal DI. Apps own the GetIt container, module selection,
+  GoRouter, flavors, theme, native configuration, and implementation choices.
 - A feature package does not know which route, tab, overlay, or app uses it.
 - A third-party provider SDK is hidden behind a domain/shared contract and selected by the app.
 
@@ -77,9 +78,16 @@ package includes a README.
 
 ## Feature composition
 
-`apps/sample_app/lib/app/features/sample_features.dart` is the single feature
-manifest. Each app-owned adapter composes one feature's dependencies, API
-service and routes or shell branch.
+The app selects feature dependencies directly in `lib/app/di.dart` and routes
+or shell branches directly in `lib/app/router/app_router.dart`. There is no
+separate feature manifest. Each app-owned feature has a folder under
+`lib/app/features/<name>/`: `<name>_di.dart` selects package DI modules and
+`<name>_routes.dart` owns routes and presentation callbacks. Generated companions
+stay beside their source. Route-only features do not need an empty DI file.
+
+Use cases may use Injectable annotations while remaining Flutter-independent.
+See [Dependency injection](tool/DEPENDENCY_INJECTION.md) for module selection,
+repository replacement, lifecycle rules and the package/app boundary.
 
 To add a feature to an app:
 
@@ -90,8 +98,9 @@ make new-feature NAME=orders APP=sample_app
 Or manually:
 
 1. Add the required Domain/Data/Presentation packages to the app `pubspec.yaml`.
-2. Create an app adapter under `lib/app/features/`.
-3. Register that adapter in the app feature manifest.
+2. Create `lib/app/features/<name>/` with separate DI and route files.
+3. Call its dependency initializer in `di.dart` and include its routes/branch in
+   `app_router.dart`. For a tab, also add the matching destination in `app_shell.dart`.
 4. Run `make get`, `make codegen`, `make lint`, and `make test`.
 
 To scaffold a new app:
@@ -227,7 +236,7 @@ only when required.
 ## Sample app
 
 `sample_app` demonstrates composition, not a second framework layer. It retains
-only app-specific concerns: bootstrap, feature manifest, router, theme, flavors,
+only app-specific concerns: bootstrap, dependency composition, router, theme, flavors,
 native projects, and a capability showcase UI. Buttons demonstrate reusable
 overlays, connectivity policies, skeletons, validation, logging, deep links,
 and onboarding. The Sample list is a complete FFCA example for pagination,

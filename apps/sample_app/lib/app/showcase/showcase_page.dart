@@ -7,6 +7,9 @@ import 'package:app_overlay/app_overlay.dart';
 import 'package:flutter/material.dart';
 import 'package:ui_kit/ui_kit.dart';
 
+import '../features/onboarding/onboarding_routes.dart';
+import '../features/showcase/showcase_routes.dart';
+
 class ShowcasePage extends StatefulWidget {
   const ShowcasePage({
     required this.connectivity,
@@ -92,7 +95,7 @@ class _ShowcasePageState extends State<ShowcasePage> {
                 OutlinedButton(
                   onPressed: () {
                     widget.connectivity.setOffline(true);
-                    widget.openLocation('/offline-block');
+                    widget.openLocation(const OfflineBlockRoute().location);
                   },
                   child: const Text('Open blocking page'),
                 ),
@@ -175,7 +178,8 @@ class _ShowcasePageState extends State<ShowcasePage> {
                   child: const Text('Open sample deep link'),
                 ),
                 OutlinedButton(
-                  onPressed: () => widget.openLocation('/onboarding'),
+                  onPressed: () =>
+                      widget.openLocation(const OnboardingRoute().location),
                   child: const Text('Onboarding'),
                 ),
               ],

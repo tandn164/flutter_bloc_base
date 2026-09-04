@@ -152,7 +152,9 @@ class _ProfileViewState extends State<_ProfileView> {
                                     builder: (context) {
                                       return FilledButton(
                                         onPressed: () {
-                                          if (!FormScope.of(context).validateAll()) return;
+                                          if (!FormScope.of(context).validateAll()) {
+                                            return;
+                                          }
                                           context.read<ProfileBloc>().add(ProfileSaved(_name.text));
                                         },
                                         child: const Text('Save profile'),

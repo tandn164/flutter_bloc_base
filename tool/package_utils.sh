@@ -22,13 +22,16 @@ workspace_library_packages() {
 }
 
 codegen_packages() {
-  find shared features "apps/${APP:-sample_app}" \
+  # Generate package modules before the app initializer imports them.
+  { find shared features \
     -type f \
     -name pubspec.yaml \
     -not -path '*/build/*' \
     -not -path '*/.dart_tool/*' \
     -print \
-    | LC_ALL=C sort \
+    | LC_ALL=C sort
+    printf '%s\n' "apps/${APP:-sample_app}/pubspec.yaml"
+  } \
     | while IFS= read -r pubspec; do
         if grep -q '^  build_runner:' "$pubspec"; then
           dirname "$pubspec"

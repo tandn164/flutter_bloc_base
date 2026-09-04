@@ -3,13 +3,18 @@
 Generate a new feature package set or clone an app skeleton.
 
 New features include Freezed models/state, generated JSON, feature-local
-Injectable registration, typed route helpers, an injected BLoC page and tests.
+package-owned Injectable micro-modules, typed route helpers, an injected BLoC page and tests.
 See [Code generation](../CODE_GENERATION.md) for the workflow and version contract.
 
 ## New feature
 
 Creates `features/<name>/{domain,data,presentation}`, registers workspace
-packages, and wires a stub adapter into `apps/<app>/lib/app/features/`.
+packages, and creates `apps/<app>/lib/app/features/<name>/` with separate
+`<name>_di.dart` and `<name>_routes.dart` files. Injectable `.config.dart` and
+typed-route `.g.dart` companions are generated beside their source files.
+Each package also generates a `lib/di/<package>_di.module.dart`. App DI selects
+these modules explicitly and awaits initialization; it does not repeat bindings.
+See [Dependency injection](../DEPENDENCY_INJECTION.md).
 
 ```bash
 make new-feature NAME=orders
@@ -22,7 +27,13 @@ Defaults:
 
 - `APP=sample_app`
 - `ROUTE_KIND=public` (`public` adds a GoRoute; `tab` adds a shell branch)
-- `WIRE=1` (set `WIRE=0` to skip app pubspec + manifest wiring)
+- `WIRE=1` (set `WIRE=0` to skip app pubspec, `di.dart` and `app_router.dart` wiring)
+
+The scaffold inserts direct calls into `di.dart` and `app_router.dart`, without
+a separate feature manifest. Keep the `// scaffold:feature-*` insertion markers
+in those files if you want automatic wiring. Missing markers fail before feature
+creation; use `WIRE=0` to wire a custom app manually. A new tab still needs its
+label/icon added to `app_shell.dart` in the same order as the router branches.
 
 After scaffolding:
 
@@ -35,7 +46,7 @@ make test APP=sample_app
 ## Delete feature
 
 Removes `features/<name>`, unregisters workspace packages, and unwires the app
-adapter/manifest. Built-in reusable/sample features (`auth`, `sample`, `profile`,
+adapter, `di.dart` and `app_router.dart`. Built-in reusable/sample features (`auth`, `sample`, `profile`,
 `onboarding`) are protected.
 
 ```bash
@@ -69,7 +80,8 @@ It also creates empty `dev`, `stg`, and `prod` Firebase configuration folders
 for Android and iOS plus an ignored `.secrets` directory. Firebase client files
 and credentials from the source app are deliberately excluded from the copy.
 
-Then trim the feature manifest and update native bundle identifiers.
+Then select dependencies in `di.dart`, routes/branches in `app_router.dart`,
+align destinations in `app_shell.dart`, and update native bundle identifiers.
 
 ## Delete app
 
@@ -79,6 +91,49 @@ configuration / module entries. `sample_app` is protected.
 ```bash
 CONFIRM=1 make delete-app NAME=merchant_app
 ```
+
+## New shared package
+
+```bash
+make new-shared NAME=my_service                 # TYPE=dart by default
+make new-shared NAME=my_widget TYPE=flutter
+```
+
+Creates a direct package at `shared/<name>` with a public barrel, `lib/src/`
+starter API, test, lint configuration and English README. It registers the
+workspace entry and runs `fvm dart pub get`. Names must be non-reserved snake_case
+and unique across repository package manifests. Existing folders are never
+overwritten. Flutter mode creates a widget package, not a native plugin.
+
+No app/feature dependency or DI registration is added automatically. Add a path
+dependency in each consumer and run `make get`. Code generators are opt-in; follow
+[Code generation](../CODE_GENERATION.md) if needed. Existing analyze/test commands
+discover the new package automatically.
+
+## Delete shared package
+
+```bash
+make delete-shared NAME=my_service               # checks and explains; no deletion
+make delete-shared NAME=my_service CONFIRM=1
+```
+
+The command refuses deletion if another manifest references the actual package
+name or a path to it, including dev dependencies and pubspec overrides. Remove
+consumer imports/registrations and dependency declarations first; the command
+does not edit consumers for you. Dependency detection is conservative and can
+also flag ambiguous matching YAML keys; the error lists the files to inspect.
+It is not an analyzer for undeclared Dart imports: run `make lint` afterwards.
+
+Only a direct `shared/<name>/pubspec.yaml` with a matching workspace entry is
+supported; symlink targets and grouped/nested packages are refused. This avoids
+accidentally removing a group such as `shared/local_storage`.
+
+After confirmation it moves the package to ignored `.scaffold-trash/`, removes
+the workspace entry, and resolves dependencies. The printed backup path retains
+uncommitted files too. To restore, move the backup to its original directory,
+restore the workspace entry, then run `make get`. Nothing is committed by either
+command. If pub get fails, the message explains the completed operation and how
+to retry; creation/deletion is not silently rolled back.
 
 ## Adopt base slug for a product repo
 

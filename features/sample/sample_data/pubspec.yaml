@@ -8,6 +8,8 @@ environment:
 resolution: workspace
 
 dependencies:
+  injectable: ^2.5.0
+  get_it: ^8.0.3
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
   chopper: ^8.1.0
@@ -19,6 +21,7 @@ dependencies:
     path: ../sample_domain
 
 dev_dependencies:
+  injectable_generator: ^2.7.0
   freezed: 3.0.6
   json_serializable: 6.9.5
   lints: ^6.0.0

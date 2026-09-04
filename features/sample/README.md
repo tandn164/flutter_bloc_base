@@ -14,4 +14,5 @@ network-backed reference for cache policies, safe decoding, and idempotent
 offline writes.
 
 See each package README and
-`apps/sample_app/lib/app/features/sample_feature.dart` for composition.
+`apps/sample_app/lib/app/features/sample/sample_di.dart` for dependency wiring and
+`apps/sample_app/lib/app/features/sample/sample_routes.dart` for route composition.
