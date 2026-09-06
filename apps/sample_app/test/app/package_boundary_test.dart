@@ -168,11 +168,8 @@ void main() {
         expect(source.contains('ExternalModule('), isTrue, reason: di.path);
         expect(source.contains('@module'), isFalse,
             reason: 'Internal bindings belong in packages');
-        expect(
-            RegExp(r'\.register(?:LazySingleton|Singleton|Factory)')
-                .hasMatch(source),
-            isFalse,
-            reason: 'Use Injectable annotations in ${di.path}');
+        // Package internals use annotations. App DI may explicitly bind a
+        // domain contract to one of the package's concrete implementations.
         expect(
             File('${folder.path}/${name}_di.config.dart').existsSync(), isTrue);
       }
@@ -191,7 +188,15 @@ void main() {
     expect(File(ws('apps/sample_app/pubspec.yaml')).existsSync(), isTrue);
   });
 
-  for (final feature in ['sample', 'auth', 'profile', 'onboarding']) {
+  for (final feature in [
+    'sample',
+    'auth',
+    'profile',
+    'onboarding',
+    'service_catalog',
+    'announcements',
+    'work_orders',
+  ]) {
     test('$feature packages do not import the app or GetIt', () {
       _assertNoAppOrGetIt(ws('features/$feature/${feature}_domain/lib'));
       _assertNoAppOrGetIt(ws('features/$feature/${feature}_data/lib'));
@@ -216,7 +221,15 @@ void main() {
   });
 
   test('feature packages remain unaware of app composition adapters', () {
-    for (final feature in ['auth', 'sample', 'profile', 'onboarding']) {
+    for (final feature in [
+      'auth',
+      'sample',
+      'profile',
+      'onboarding',
+      'service_catalog',
+      'announcements',
+      'work_orders',
+    ]) {
       final root = ws('features/$feature');
       for (final file in Directory(root)
           .listSync(recursive: true)

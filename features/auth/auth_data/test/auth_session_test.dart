@@ -11,7 +11,8 @@ class _Refresher implements TokenRefresher {
 }
 
 void main() {
-  test('restore from vault → authenticated; empty vault + guestAllowed → guest', () async {
+  test('restore from vault → authenticated; empty vault + guestAllowed → guest',
+      () async {
     final vault = MemoryTokenVault();
     final session = AuthSession(
       guestAllowed: true,

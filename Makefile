@@ -11,6 +11,7 @@ APP_DIR   := apps/$(APP)
 FLAVOR    ?= dev
 WIRE      ?= 1
 ROUTE_KIND ?= public
+DATA      ?= remote
 SOURCE    ?= sample_app
 TYPE      ?= dart
 FLUTTER   := fvm flutter
@@ -37,7 +38,7 @@ help:
 	@echo "  make l10n       pull Google Sheet CSV and generate ARB/localizations"
 	@echo "  make release    export APK/AAB/IPA or upload to Firebase/TestFlight/App Store"
 	@echo "  make setup-hooks install pre-commit and commit-message validation"
-	@echo "  make new-feature NAME=orders [APP=sample_app] [ROUTE_KIND=public|tab]"
+	@echo "  make new-feature NAME=orders [DATA=remote|memory-cache|persistent-cache|offline-first|local]"
 	@echo "  make delete-feature NAME=orders [APP=sample_app] CONFIRM=1"
 	@echo "  make new-app NAME=merchant_app [SOURCE=sample_app]"
 	@echo "  make new-shared NAME=my_service [TYPE=dart|flutter]"
@@ -91,7 +92,7 @@ setup-hooks:
 
 new-feature:
 	@test -n "$(NAME)" || (echo "error: NAME is required (e.g. make new-feature NAME=orders)" >&2; exit 1)
-	@NAME="$(NAME)" APP="$(APP)" WIRE="$(WIRE)" ROUTE_KIND="$(ROUTE_KIND)" bash tool/scaffold/new_feature.sh
+	@NAME="$(NAME)" APP="$(APP)" WIRE="$(WIRE)" ROUTE_KIND="$(ROUTE_KIND)" DATA="$(DATA)" bash tool/scaffold/new_feature.sh
 
 delete-feature:
 	@test -n "$(NAME)" || (echo "error: NAME is required (e.g. make delete-feature NAME=orders CONFIRM=1)" >&2; exit 1)
@@ -103,7 +104,7 @@ new-app:
 
 delete-app:
 	@test -n "$(NAME)" || (echo "error: NAME is required (e.g. make delete-app NAME=merchant_app CONFIRM=1)" >&2; exit 1)
-	@NAME="$(NAME)" CONFIRM="$(CONFIRM)" bash tool/scaffold/delete_app.sh
+	@NAME="$(NAME)" CONFIRM="$(CONFIRM)" ALLOW_DELETE_SAMPLE="$(ALLOW_DELETE_SAMPLE)" bash tool/scaffold/delete_app.sh
 
 adopt-project:
 	@test -n "$(PACKAGE)" || (echo "error: PACKAGE is required (e.g. make adopt-project PACKAGE=acme_merchant CONFIRM=1)" >&2; exit 1)

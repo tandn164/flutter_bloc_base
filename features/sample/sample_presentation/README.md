@@ -4,6 +4,8 @@
 `SampleData` and `SampleError` constructors. `copyWith(notice: null)` clears a
 notice; omitting it preserves the notice. BLoC transitions explicitly clear old
 notices when needed. Regenerate with `make codegen` after editing state fields.
+The BLoC implementation, events, and states are kept in separate files under
+`lib/src/bloc/`; Freezed output is generated beside `sample_state.dart`.
 
 Flutter sample page and BLoC. The app injects domain use cases and handles notices,
 loading, navigation, and brand-specific presentation through callbacks.

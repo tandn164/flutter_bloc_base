@@ -37,7 +37,7 @@ features/
   profile/                   # profile load/update/sign-out
 
 shared/
-  api_client/                # transport, policies, cache gateway, safe decoding
+  api_client/                # REST transport and safe Chopper decoding
   app_overlay/               # global loading/toast/offline/tutorial host
   app_result/                # typed Result and Failure
   connectivity/              # conservative connectivity signal
@@ -45,9 +45,11 @@ shared/
     core/                    # pure Dart key/value contract
     stores/
       shared_preferences/    # optional SharedPreferences adapter
+      drift/                 # default durable SQLite adapter
+  memory_cache/              # small process-local TTL cache
   logging/                   # background serial log queue and API interceptor
   navigation/                # session redirects, deep links, nav logging
-  offline_sync/              # durable idempotent write outbox
+  offline_sync/              # feature sync run coordination
   push/                      # provider-neutral push contract and presentation options
   session/                   # provider-neutral session contract
   interceptor/               # ApiClient interceptors (auth, …)
@@ -93,6 +95,10 @@ To add a feature to an app:
 
 ```bash
 make new-feature NAME=orders APP=sample_app
+make new-feature NAME=news APP=sample_app DATA=memory-cache
+make new-feature NAME=feed APP=sample_app DATA=persistent-cache
+make new-feature NAME=tasks APP=sample_app DATA=offline-first
+make new-feature NAME=drafts APP=sample_app DATA=local
 ```
 
 Or manually:
@@ -109,11 +115,21 @@ To scaffold a new app:
 make new-app NAME=merchant_app
 ```
 
-To remove a scaffolded app (protects `sample_app`):
+To remove a scaffolded app:
 
 ```bash
 CONFIRM=1 make delete-app NAME=merchant_app
 ```
+
+`sample_app` is protected because it is the reference implementation. Once a
+different app exists, it can be removed explicitly:
+
+```bash
+CONFIRM=1 ALLOW_DELETE_SAMPLE=1 make delete-app NAME=sample_app
+```
+
+The last remaining app cannot be deleted. If the deleted app was the Makefile
+default, another app is selected as the new default.
 
 To remove a scaffolded feature (protects `auth`, `sample`, `profile`, `onboarding`):
 
@@ -188,18 +204,22 @@ keep `sample_app` as the reference composition or trim it later.
 
 ## Reusable UX capabilities
 
-### Offline-first data
+### Data strategies
 
-`api_client` supports cache-first, network-first, stale-while-revalidate, and
-network-only reads. Decode errors become typed failures. `offline_sync` persists
-explicitly retryable writes, drains them serially, applies exponential backoff,
-and moves permanent failures to a dead-letter queue.
+The base keeps the choice visible in each feature repository instead of hiding
+it in the HTTP client:
 
-Automatic write delivery is at least once. Every queued mutation requires a
-stable idempotency key and matching server-side deduplication. SharedPreferences
-is intended for modest queues; use a database adapter for larger sync workloads.
-OS execution while the app is suspended still needs a platform background-task
-adapter.
+- **No cache:** always call the remote datasource. See `service_catalog`.
+- **Short memory cache:** wrap remote reads with `MemoryTtlCache`; TTL is owned
+  by the feature. See `announcements`.
+- **Offline-first:** Drift/SQLite is the local source of truth; observe local data,
+  write locally first, then synchronize with remote. See `work_orders`.
+
+`api_client` handles transport and safe decoding only. A feature can replace its
+remote adapter with Chopper, Firestore, Realtime Database, or MongoDB without
+changing its domain contract. Retry queues are feature commands, not serialized
+HTTP requests; idempotent server operations remain required for at-least-once
+delivery.
 
 ### App-wide overlays
 

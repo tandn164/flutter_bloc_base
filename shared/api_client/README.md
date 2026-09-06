@@ -1,71 +1,32 @@
 # API Client
 
-Generic HTTP and data-access infrastructure. The package contains no business
-endpoint and does not depend on feature packages.
+Small REST infrastructure for feature data packages. It declares low-level
+request/interceptor contracts, provides HTTP/Chopper adapters, and converts
+Chopper responses into typed `Result` values.
 
-See [Component connections and request-flow diagrams](ARCHITECTURE.md) for how
-the client, gateway, cache, interceptors, and offline queue work together.
-
-## Main APIs
-
-- `ApiClient` sends requests through a pluggable `ApiTransport` and interceptors.
-- `DataGateway` applies read caching, safe decoding, invalidation, and offline writes.
-- `RequestPolicy` selects a read strategy and explicitly opts a write into retry.
-- `CacheStore` and `Outbox` are replaceable persistence boundaries.
-
-`ConnectivityHint` is re-exported for compatibility, but its implementation now
-lives in the standalone `app_connectivity` package.
-
-## Safe decoding
+It owns **no cache, database, or offline policy**. Those choices stay visible
+in each feature repository.
 
 ```dart
-final result = await gateway.read(
-  path: '/tasks',
-  decode: (json) => TaskDto.fromJson(json as Map<String, dynamic>),
+@GET(path: '/tasks')
+Future<Response<dynamic>> tasks();
+
+final result = await chopperResult(
+  api.tasks,
+  (json) => TaskDto.fromJson(json as Map<String, dynamic>),
 );
 ```
 
-Malformed JSON and mapping exceptions become `DecodeFailure`; they do not escape
-into a BLoC or crash the UI. Repositories should map DTOs to domain entities after
-the gateway succeeds.
+Malformed JSON and mapper exceptions become `DecodeFailure`.
 
-## Read strategies
+Data strategy:
 
-```dart
-const RequestPolicy(read: ReadStrategy.cacheFirst, ttl: Duration(minutes: 5));
-const RequestPolicy(read: ReadStrategy.networkFirst);
-const RequestPolicy(read: ReadStrategy.staleWhileRevalidate);
-const RequestPolicy(read: ReadStrategy.networkOnly);
-```
+- remote-only: call the generated API directly;
+- short cache: wrap the remote call with `MemoryTtlCache`;
+- offline-first: coordinate feature-owned local and remote datasources.
 
-`MemoryCacheStore` is suitable for tests and short-lived data. Provide a database
-adapter when cached data must survive process restarts.
-
-## Offline writes
-
-```dart
-ApiRequest(
-  method: 'POST',
-  path: '/tasks',
-  body: {'title': 'Offline task'},
-  policy: const RequestPolicy(
-    retryOnReconnect: true,
-    idempotencyKey: 'stable-operation-id',
-  ),
-);
-```
-
-Use `PersistentOutbox` from `offline_sync` in production composition. Delivery is
-at least once: the server must deduplicate the idempotency key. Do not retry
-irreversible operations unless their server contract is idempotent.
-
-## Interceptors
-
-Cross-cutting behavior is composed by the app:
-
-- `interceptor` adds auth headers and refresh handling on 401.
-- `app_logging` records redacted request/response metadata.
-- Feature data packages own their endpoint declarations.
+Firestore, Realtime Database, MongoDB, and local databases implement feature
+datasource contracts directly; they do not pass through this package.
 
 ## Testing
 

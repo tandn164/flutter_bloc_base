@@ -13,6 +13,8 @@ workspace:
   - shared/app_overlay
   - shared/local_storage/core
   - shared/local_storage/stores/shared_preferences
+  - shared/local_storage/stores/drift
+  - shared/memory_cache
   - shared/offline_sync
   - shared/api_client
   - shared/ui_kit
@@ -34,7 +36,14 @@ workspace:
   - features/onboarding/onboarding_data
   - features/onboarding/onboarding_presentation
 
+  - features/service_catalog/service_catalog_domain
+  - features/service_catalog/service_catalog_data
+  - features/service_catalog/service_catalog_presentation
+  - features/announcements/announcements_domain
+  - features/announcements/announcements_data
+  - features/announcements/announcements_presentation
+  - features/work_orders/work_orders_domain
+  - features/work_orders/work_orders_data
+  - features/work_orders/work_orders_presentation
 flutter:
   uses-material-design: true
-
-

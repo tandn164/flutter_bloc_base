@@ -1,36 +1,15 @@
 import 'package:injectable/injectable.dart';
 import '../auth_callbacks.dart';
 import 'package:auth_domain/auth_domain.dart';
-import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'auth_notice.dart';
+import 'login_event.dart';
+import 'login_state.dart';
 
 export 'auth_notice.dart';
-
-sealed class LoginEvent extends Equatable {
-  const LoginEvent();
-  @override
-  List<Object?> get props => [];
-}
-
-class LoginSubmitted extends LoginEvent {
-  const LoginSubmitted({required this.email, required this.password});
-  final String email;
-  final String password;
-  @override
-  List<Object?> get props => [email, password];
-}
-
-class LoginState extends Equatable {
-  const LoginState({this.busy = false, this.notice});
-
-  final bool busy;
-  final AuthNotice? notice;
-
-  @override
-  List<Object?> get props => [busy, notice];
-}
+export 'login_event.dart';
+export 'login_state.dart';
 
 @injectable
 class LoginBloc extends Bloc<LoginEvent, LoginState> {

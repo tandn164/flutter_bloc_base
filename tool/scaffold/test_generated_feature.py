@@ -25,7 +25,11 @@ class GeneratedFeatureTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             shutil.copytree(source / 'tool/scaffold', root / 'tool/scaffold')
-            (root / 'tool/codegen_all.sh').write_text('#!/bin/sh\nexit 0\n')
+            shutil.copyfile(source / 'tool/codegen_all.sh', root / 'tool/codegen_all.sh')
+            shutil.copyfile(source / 'tool/package_utils.sh', root / 'tool/package_utils.sh')
+            unrelated = root / 'shared/unrelated'
+            unrelated.mkdir(parents=True)
+            (unrelated / 'pubspec.yaml').write_text('name: unrelated\ndev_dependencies:\n  build_runner: ^2.4.13\n')
             (root / 'pubspec.yaml').write_text('name: fixture\nworkspace:\n  - apps/sample_app\ndev_dependencies:\n  test: ^1.25.0\n')
             app = root / 'apps/sample_app'
             (app / 'lib/app/features').mkdir(parents=True)
@@ -38,16 +42,48 @@ class GeneratedFeatureTest(unittest.TestCase):
             bin_dir = root / 'bin'
             bin_dir.mkdir()
             fvm = bin_dir / 'fvm'
-            fvm.write_text('#!/bin/sh\nexit 0\n')
+            fvm.write_text('#!/bin/sh\nprintf "%s|%s\\n" "$PWD" "$*" >> "$SCAFFOLD_CALL_LOG"\n'
+                           'if [ "$PWD" = "$FAIL_PACKAGE" ] && [ "$1 $2" = "dart run" ]; then exit 9; fi\nexit 0\n')
             fvm.chmod(0o755)
-            env = dict(os.environ, PATH=f'{bin_dir}:{os.environ["PATH"]}', APP='sample_app', ROUTE_KIND='tab')
-            for name, wire, kind in [('order_history', '1', 'tab'), ('inventory', '1', 'tab'), ('reports', '1', 'public'), ('detached', '0', 'public')]:
+            log = root / 'calls.log'
+            env = dict(os.environ, PATH=f'{bin_dir}:{os.environ["PATH"]}', APP='sample_app', ROUTE_KIND='tab',
+                       USE_SYSTEM_SDK='0', SCAFFOLD_CALL_LOG=str(log), FAIL_PACKAGE='')
+            cases = [
+                ('order_history', '1', 'tab', 'remote'),
+                ('inventory', '1', 'tab', 'memory-cache'),
+                ('news', '1', 'public', 'persistent-cache'),
+                ('reports', '1', 'public', 'offline-first'),
+                ('detached', '0', 'public', 'local'),
+            ]
+            for name, wire, kind, data in cases:
+                log.write_text('')
                 result = subprocess.run(['bash', str(root / 'tool/scaffold/new_feature.sh')],
-                                        env=dict(env, NAME=name, WIRE=wire, ROUTE_KIND=kind), capture_output=True, text=True)
+                                        env=dict(env, NAME=name, WIRE=wire, ROUTE_KIND=kind, DATA=data), capture_output=True, text=True)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                expected = [f'{root}|dart pub get']
+                expected += [f'{root}/features/{name}/{name}_{layer}|dart run build_runner build --delete-conflicting-outputs'
+                             for layer in ('domain', 'data', 'presentation')]
+                if wire == '1':
+                    expected += [f'{app}|flutter gen-l10n', f'{app}|dart run build_runner build --delete-conflicting-outputs']
+                self.assertEqual(log.read_text().splitlines(), expected)
                 dto = root / f'features/{name}/{name}_data/lib/src/{name}_item_dto.dart'
                 self.assertIn('@freezed', dto.read_text())
                 self.assertNotIn('__name__', dto.read_text())
+                data_lib = root / f'features/{name}/{name}_data/lib'
+                self.assertEqual((data_lib / f'src/{name}_remote_data_source.dart').exists(),
+                                 data in ('remote', 'memory-cache', 'persistent-cache', 'offline-first'))
+                self.assertEqual((data_lib / f'src/{name}_local_data_source.dart').exists(),
+                                 data in ('local', 'offline-first'))
+                data_pubspec = (root / f'features/{name}/{name}_data/pubspec.yaml').read_text()
+                self.assertEqual('memory_cache:' in data_pubspec, data == 'memory-cache')
+                self.assertEqual('local_storage:' in data_pubspec,
+                                 data in ('local', 'persistent-cache', 'offline-first'))
+                bloc_dir = root / f'features/{name}/{name}_presentation/lib/src'
+                self.assertTrue((bloc_dir / f'{name}_bloc.dart').exists())
+                self.assertTrue((bloc_dir / f'{name}_event.dart').exists())
+                self.assertTrue((bloc_dir / f'{name}_state.dart').exists())
+                self.assertNotIn(f'class {name.title().replace("_", "")}Event',
+                                 (bloc_dir / f'{name}_bloc.dart').read_text())
                 for layer in ('domain', 'data', 'presentation'):
                     package = root / f'features/{name}/{name}_{layer}'
                     self.assertGreater(len((package / 'README.md').read_text()), 80)
@@ -74,7 +110,8 @@ class GeneratedFeatureTest(unittest.TestCase):
                 self.assertIn('ExternalModule(', source_di)
                 self.assertNotIn('@module', source_di)
                 self.assertIn(f"import '{name}_di.config.dart';", source_di)
-                self.assertNotIn('registerLazySingleton', source_di)
+                self.assertIn('registerLazySingleton', source_di)
+                self.assertNotIn('environment:', source_di)
                 self.assertIn('await register', app_di.read_text())
                 for layer in ('domain', 'data', 'presentation'):
                     package = root / f'features/{name}/{name}_{layer}'
@@ -103,12 +140,42 @@ class GeneratedFeatureTest(unittest.TestCase):
             self.assertIn('createInventoryBranch(sl)', router.read_text())
             self.assertIn('registerReportsDependencies(sl)', app_di.read_text())
 
+            # The separate full-workspace command must still visit other packages.
+            log.write_text('')
+            result = subprocess.run(['bash', str(root / 'tool/codegen_all.sh')],
+                                    env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            generated = [line.split('|')[0] for line in log.read_text().splitlines()
+                         if '|dart run build_runner ' in line]
+            expected_packages = {str(unrelated), str(app)}
+            expected_packages.update(str(root / f'features/{name}/{name}_{layer}')
+                                     for name in ('inventory', 'news', 'reports', 'detached')
+                                     for layer in ('domain', 'data', 'presentation'))
+            self.assertEqual(set(generated), expected_packages)
+            self.assertEqual(generated[-1], str(app))
+
+            # A failed package generation stops before later packages/app generation.
+            log.write_text('')
+            result = subprocess.run(['bash', str(root / 'tool/scaffold/new_feature.sh')],
+                                    env=dict(env, NAME='broken', WIRE='1',
+                                             FAIL_PACKAGE=str(root / 'features/broken/broken_data')),
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertEqual(len(log.read_text().splitlines()), 3) # pub get, domain, data
+            self.assertNotIn(f'{app}|', log.read_text())
+
             # Fail before creating files if an app cannot be safely wired.
             app_di.write_text(app_di.read_text().replace('// scaffold:feature-registrations', ''))
             result = subprocess.run(['bash', str(root / 'tool/scaffold/new_feature.sh')],
                                     env=dict(env, NAME='invalid_wiring', WIRE='1'), capture_output=True, text=True)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse((root / 'features/invalid_wiring').exists())
+
+            result = subprocess.run(['bash', str(root / 'tool/scaffold/new_feature.sh')],
+                                    env=dict(env, NAME='invalid_data', DATA='magic'),
+                                    capture_output=True, text=True)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse((root / 'features/invalid_data').exists())
 
 
 if __name__ == '__main__':

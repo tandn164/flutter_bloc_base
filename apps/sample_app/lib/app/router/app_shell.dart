@@ -15,8 +15,16 @@ class AppShell extends StatelessWidget {
         label: 'Capabilities',
       ),
       AdaptiveDestination(
-        icon: Icon(Icons.view_list_outlined),
-        label: 'Sample list',
+        icon: Icon(Icons.home_repair_service_outlined),
+        label: 'Catalog',
+      ),
+      AdaptiveDestination(
+        icon: Icon(Icons.campaign_outlined),
+        label: 'News',
+      ),
+      AdaptiveDestination(
+        icon: Icon(Icons.assignment_outlined),
+        label: 'Work',
       ),
     ];
 

@@ -1,0 +1,7 @@
+sealed class __Pascal__Event {
+  const __Pascal__Event();
+}
+
+class __Pascal__Started extends __Pascal__Event {
+  const __Pascal__Started();
+}

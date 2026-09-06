@@ -1,11 +1,11 @@
 import 'package:injectable/injectable.dart';
+import 'package:api_client/api_client.dart';
 import 'package:app_result/app_result.dart';
 
 import '../api/auth_api.dart';
-import '../chopper_result.dart';
 import '../dtos/token_pair_dto.dart';
 
-@LazySingleton(env: ['remote'])
+@LazySingleton()
 class AuthNetworkDs {
   AuthNetworkDs(this._api);
 
@@ -15,12 +15,12 @@ class AuthNetworkDs {
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await _api.login({'email': email, 'password': password});
-      return resultFromChopper(response, TokenPairDto.fromJson);
-    } catch (_) {
-      return const Err(NetworkFailure());
-    }
+    return chopperResult(
+      () => _api.login(
+        {'email': email, 'password': password},
+      ),
+      (json) => TokenPairDto.fromJson(json as Map<String, dynamic>),
+    );
   }
 
   Future<Result<TokenPairDto>> signup({
@@ -28,15 +28,11 @@ class AuthNetworkDs {
     required String password,
     required String name,
   }) async {
-    try {
-      final response = await _api.signup({
-        'email': email,
-        'password': password,
-        'name': name,
-      });
-      return resultFromChopper(response, TokenPairDto.fromJson);
-    } catch (_) {
-      return const Err(NetworkFailure());
-    }
+    return chopperResult(
+      () => _api.signup(
+        {'email': email, 'password': password, 'name': name},
+      ),
+      (json) => TokenPairDto.fromJson(json as Map<String, dynamic>),
+    );
   }
 }

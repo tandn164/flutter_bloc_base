@@ -10,8 +10,17 @@ NAME="${NAME:-}"
 APP="${APP:-sample_app}"
 WIRE="${WIRE:-1}"
 ROUTE_KIND="${ROUTE_KIND:-public}" # public | tab
+DATA="${DATA:-remote}" # remote | memory-cache | persistent-cache | offline-first | local
 
 require_name "NAME" "$NAME"
+
+case "$DATA" in
+  remote|memory-cache|persistent-cache|offline-first|local) ;;
+  *)
+    echo "error: DATA=$DATA must be remote, memory-cache, persistent-cache, offline-first, or local" >&2
+    exit 1
+    ;;
+esac
 
 if [[ -d "$ROOT/features/$NAME" ]]; then
   echo "error: features/$NAME already exists" >&2
@@ -274,17 +283,30 @@ PY
 fi
 
 info "apply generated model, BLoC, DI, and route conventions"
-python3 "$ROOT/tool/scaffold/generated_feature.py" "$ROOT" "$NAME" "$APP" "$WIRE"
+python3 "$ROOT/tool/scaffold/generated_feature.py" "$ROOT" "$NAME" "$APP" "$WIRE" "$DATA"
 
 info "dart pub get"
 (cd "$ROOT" && fvm dart pub get >/dev/null)
 
 info "generate sources"
-(cd "$ROOT" && APP="$APP" bash tool/codegen_all.sh)
+# Only the new packages changed; keep full-workspace generation in make codegen.
+# shellcheck disable=SC1091
+source "$ROOT/tool/package_utils.sh"
+for layer in domain data presentation; do
+  package="$FEATURE_ROOT/${NAME}_${layer}"
+  info "build_runner features/${NAME}/${NAME}_${layer}"
+  (cd "$package" && "${DART_CMD[@]}" run build_runner build --delete-conflicting-outputs </dev/null)
+done
+if [[ "$WIRE" == "1" ]]; then
+  info "gen-l10n apps/$APP"
+  (cd "$APP_DIR" && "${FLUTTER_CMD[@]}" gen-l10n)
+  info "build_runner apps/$APP"
+  (cd "$APP_DIR" && "${DART_CMD[@]}" run build_runner build --delete-conflicting-outputs </dev/null)
+fi
 
 cat <<EOF
 
-Created features/${NAME}/ (${NAME}_domain, ${NAME}_data, ${NAME}_presentation)
+Created features/${NAME}/ (${NAME}_domain, ${NAME}_data, ${NAME}_presentation; DATA=${DATA})
 $( [[ "$WIRE" == "1" ]] && echo "Wired into apps/${APP} (adapter + pubspec + di.dart + app_router.dart)" )
 
 Next:
@@ -295,4 +317,8 @@ Next:
 Options:
   ROUTE_KIND=tab make new-feature NAME=${NAME}   # shell tab instead of public route
   WIRE=0 make new-feature NAME=${NAME}            # packages only, no app wiring
+  DATA=memory-cache make new-feature NAME=${NAME}  # short process-local TTL cache
+  DATA=persistent-cache make new-feature NAME=${NAME} # disk TTL cache
+  DATA=offline-first make new-feature NAME=${NAME} # local source plus remote sync
+  DATA=local make new-feature NAME=${NAME}         # local storage only
 EOF

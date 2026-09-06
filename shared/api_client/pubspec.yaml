@@ -1,5 +1,5 @@
 name: api_client
-description: Generic HTTP transport, request policy, and DataGateway. No feature paths.
+description: REST transport primitives and safe Chopper response decoding.
 version: 1.0.0
 publish_to: "none"
 
@@ -8,11 +8,10 @@ environment:
 resolution: workspace
 
 dependencies:
+  chopper: ^8.1.0
   http: ^1.1.0
   app_result:
     path: ../app_result
-  app_connectivity:
-    path: ../connectivity
 
 dev_dependencies:
   lints: ^6.0.0

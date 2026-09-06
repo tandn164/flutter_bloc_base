@@ -1,12 +1,18 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:onboarding_data/di/onboarding_data_di.module.dart';
+import 'package:onboarding_data/onboarding_data.dart';
 import 'package:onboarding_domain/di/onboarding_domain_di.module.dart';
+import 'package:onboarding_domain/onboarding_domain.dart';
 import 'onboarding_di.config.dart';
 
-Future<void> registerOnboardingDependencies(GetIt sl,
-        {String environment = 'local'}) =>
-    configureOnboardingDependencies(sl, environment: environment);
+Future<void> registerOnboardingDependencies(GetIt sl) async {
+  await configureOnboardingDependencies(sl);
+  if (sl.isRegistered<OnboardingRepository>()) return;
+  sl.registerLazySingleton<OnboardingRepository>(
+    () => sl<StoredOnboardingRepository>(),
+  );
+}
 
 @InjectableInit(
   initializerName: 'initOnboardingFeature',
@@ -17,7 +23,6 @@ Future<void> registerOnboardingDependencies(GetIt sl,
     ExternalModule(OnboardingDomainPackageModule),
   ],
 )
-Future<void> configureOnboardingDependencies(GetIt container,
-    {String environment = 'local'}) async {
-  await container.initOnboardingFeature(environment: environment);
+Future<void> configureOnboardingDependencies(GetIt container) async {
+  await container.initOnboardingFeature();
 }

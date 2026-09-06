@@ -6,7 +6,7 @@ import 'package:auth_domain/auth_domain.dart';
 import '../api/auth_api.dart';
 import 'token_refresher.dart';
 
-@LazySingleton(as: TokenRefresher, env: ['remote'])
+@LazySingleton()
 class ApiTokenRefresher implements TokenRefresher {
   ApiTokenRefresher(this._transport);
 

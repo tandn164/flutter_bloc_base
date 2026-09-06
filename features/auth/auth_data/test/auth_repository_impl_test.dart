@@ -25,12 +25,13 @@ class _LoginTransport implements ApiTransport {
 }
 
 void main() {
-  test('remote module wires API, datasource and repository', () async {
+  test('package module wires concrete API, datasource and repository',
+      () async {
     final sl = GetIt.asNewInstance();
     final transport = _LoginTransport();
     final client = ChopperClient(
       baseUrl: Uri.parse('http://local'),
-      client: ApiHttpClient(ApiClient(transport: transport)),
+      client: ChopperApiTransportAdapter(ApiClient(transport: transport)),
       converter: const JsonConverter(),
       errorConverter: const JsonConverter(),
     );
@@ -41,31 +42,32 @@ void main() {
     sl.registerSingleton<TokenVault>(MemoryTokenVault());
     sl.registerSingleton<AuthSessionConfig>(const AuthSessionConfig(
         guestAllowed: false, restoreDelay: Duration.zero));
-    await AuthDataPackageModule().init(GetItHelper(sl, 'remote'));
-    final repository = sl<AuthRepository>();
-    expect(repository, same(sl<AuthRepository>()));
+    await AuthDataPackageModule().init(GetItHelper(sl));
+    sl.registerLazySingleton<TokenRefresher>(() => sl<ApiTokenRefresher>());
+    final repository = sl<AuthRepositoryImpl>();
+    expect(repository, same(sl<AuthRepositoryImpl>()));
     final result = await repository.login(email: 'a@b.c', password: 'x');
     expect(result, isA<Ok>());
-    final session = sl<Session>();
+    final session = sl<AuthSession>();
     await session.restore();
     expect(session.state.status, SessionStatus.unauthenticated);
     await sl.reset();
-    expect(
-        () => (session as AuthSession).addListener(() {}), throwsFlutterError);
+    expect(() => session.addListener(() {}), throwsFlutterError);
   });
 
-  test('custom environment does not install remote providers', () async {
+  test('package module leaves product contracts for app binding', () async {
     final sl = GetIt.asNewInstance();
     addTearDown(sl.reset);
-    await AuthDataPackageModule().init(GetItHelper(sl, 'custom'));
+    await AuthDataPackageModule().init(GetItHelper(sl));
     expect(sl.isRegistered<AuthRepository>(), isFalse);
-    expect(sl.isRegistered<AuthApi>(), isFalse);
+    expect(sl.isRegistered<AuthRepositoryImpl>(), isTrue);
+    expect(sl.isRegistered<AuthApi>(), isTrue);
   });
   test('AuthRepositoryImpl login goes through AuthApi path once', () async {
     final client = ApiClient(transport: _LoginTransport());
     final chopper = ChopperClient(
       baseUrl: Uri.parse('http://local'),
-      client: ApiHttpClient(client),
+      client: ChopperApiTransportAdapter(client),
       converter: const JsonConverter(),
       errorConverter: const JsonConverter(),
       services: [AuthApi.create()],

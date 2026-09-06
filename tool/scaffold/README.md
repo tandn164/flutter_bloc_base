@@ -4,7 +4,13 @@ Generate a new feature package set or clone an app skeleton.
 
 New features include Freezed models/state, generated JSON, feature-local
 package-owned Injectable micro-modules, typed route helpers, an injected BLoC page and tests.
+Generated presentation code keeps BLoC, event, and state declarations in three
+separate files; Freezed output is generated beside the state file.
 See [Code generation](../CODE_GENERATION.md) for the workflow and version contract.
+
+Data modules register concrete implementations. App DI binds each domain
+repository contract explicitly; datasource selection never depends on an
+Injectable environment string.
 
 ## New feature
 
@@ -13,13 +19,18 @@ packages, and creates `apps/<app>/lib/app/features/<name>/` with separate
 `<name>_di.dart` and `<name>_routes.dart` files. Injectable `.config.dart` and
 typed-route `.g.dart` companions are generated beside their source files.
 Each package also generates a `lib/di/<package>_di.module.dart`. App DI selects
-these modules explicitly and awaits initialization; it does not repeat bindings.
+these modules, awaits initialization, and owns the interface-to-implementation
+binding.
 See [Dependency injection](../DEPENDENCY_INJECTION.md).
 
 ```bash
 make new-feature NAME=orders
 make new-feature NAME=orders APP=sample_app
 make new-feature NAME=catalog ROUTE_KIND=tab
+make new-feature NAME=news DATA=memory-cache
+make new-feature NAME=feed DATA=persistent-cache
+make new-feature NAME=tasks DATA=offline-first
+make new-feature NAME=drafts DATA=local
 WIRE=0 make new-feature NAME=reports   # packages only
 ```
 
@@ -28,6 +39,22 @@ Defaults:
 - `APP=sample_app`
 - `ROUTE_KIND=public` (`public` adds a GoRoute; `tab` adds a shell branch)
 - `WIRE=1` (set `WIRE=0` to skip app pubspec, `di.dart` and `app_router.dart` wiring)
+- `DATA=remote`; alternatives are `memory-cache`, `persistent-cache`,
+  `offline-first`, and `local`
+
+Data strategies:
+
+- `remote`: repository calls a generated remote datasource contract directly.
+- `memory-cache`: remote datasource plus `MemoryTtlCache` with a 10-minute default TTL.
+- `persistent-cache`: remote datasource plus disk cache with a 30-minute default
+  TTL; cache survives app restarts but remains disposable.
+- `offline-first`: Drift-backed `KeyValueStore` local datasource plus remote datasource; remote
+  refresh replaces local data and local data is returned when refresh fails.
+- `local`: `KeyValueStore` local datasource only; no remote contract is generated.
+
+For strategies containing `remote`, register a real implementation of the
+generated `<Feature>RemoteDataSource` in app DI before resolving the repository.
+The generator never registers a fake provider.
 
 The scaffold inserts direct calls into `di.dart` and `app_router.dart`, without
 a separate feature manifest. Keep the `// scaffold:feature-*` insertion markers
@@ -36,6 +63,14 @@ creation; use `WIRE=0` to wire a custom app manually. A new tab still needs its
 label/icon added to `app_shell.dart` in the same order as the router branches.
 
 After scaffolding:
+
+Creation runs workspace `pub get`, then codegen only for the new Domain, Data
+and Presentation packages (in that order), followed by localization and codegen
+for the selected app. `WIRE=0` generates only the three packages; it does not
+regenerate any app. Existing features and shared packages are not regenerated.
+Run `make codegen APP=sample_app` separately when full-workspace generation is
+needed (for example, after editing another package's DI or missing generated files).
+The selected app's build_runner may still process other libraries inside that app.
 
 ```bash
 make get
@@ -86,11 +121,18 @@ align destinations in `app_shell.dart`, and update native bundle identifiers.
 ## Delete app
 
 Removes `apps/<name>`, unregisters the Dart workspace entry, and cleans IDE run
-configuration / module entries. `sample_app` is protected.
+configuration / module entries. `sample_app` is protected by default. After a
+product app exists, remove the reference app with an explicit override:
 
 ```bash
 CONFIRM=1 make delete-app NAME=merchant_app
+
+# Only after another app exists:
+CONFIRM=1 ALLOW_DELETE_SAMPLE=1 make delete-app NAME=sample_app
 ```
+
+The command refuses to remove the last app in the workspace. When the deleted
+app was the Makefile default, the remaining app becomes the new default.
 
 ## New shared package
 

@@ -1,4 +1,5 @@
 import 'package:api_client/api_client.dart';
+import 'package:app_connectivity/app_connectivity.dart';
 import 'package:app_result/app_result.dart';
 import 'package:app_session/app_session.dart';
 

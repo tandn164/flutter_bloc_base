@@ -8,10 +8,18 @@ local_storage/
   core/                       # package: local_storage (pure Dart)
   stores/
     shared_preferences/       # package: local_storage_shared_preferences
+    drift/                    # package: local_storage_drift (default database)
 ```
 
 Apps and reusable capabilities depend on `local_storage/core`. An app selects
 only the concrete store packages it needs in its composition root.
+
+Use `local_storage_drift` as the default durable adapter, especially for
+`DATA=offline-first`. Use SharedPreferences for small platform preferences when
+a database is unnecessary.
+
+`PersistentJsonCache` stores one disposable JSON value with a TTL. Use it for
+server cache that should survive app restarts, not as an offline source of truth.
 
 ## Adding a store
 

@@ -11,6 +11,11 @@ Choose one creation command; do not run all variants for the same name.
 
 ```bash
 make new-feature NAME=orders APP=sample_app                  # public route
+make new-feature NAME=orders APP=sample_app DATA=remote      # remote only (default)
+make new-feature NAME=orders APP=sample_app DATA=memory-cache # remote + TTL memory cache
+make new-feature NAME=orders APP=sample_app DATA=persistent-cache # remote + TTL disk cache
+make new-feature NAME=orders APP=sample_app DATA=offline-first # local + remote
+make new-feature NAME=orders APP=sample_app DATA=local       # local storage only
 make new-feature NAME=orders APP=sample_app ROUTE_KIND=tab   # shell branch
 make new-feature NAME=orders APP=sample_app WIRE=0           # packages only
 make get                                                  # after dependency edits
@@ -22,7 +27,8 @@ make codegen-check APP=sample_app                          # CI: compare generat
 python3 -m unittest discover -s tool/scaffold -p 'test_*.py' # when scaffolding changes
 ```
 
-Scaffolding already resolves dependencies and runs codegen. Do not duplicate that work unless inputs changed.
+Scaffolding resolves workspace dependencies, then generates only the new Domain/Data/Presentation packages and selected app.
+`WIRE=0` skips app codegen/l10n. `make codegen` still generates the whole workspace; do not rerun it unless needed.
 `codegen-check` also rejects valid uncommitted generated changes; report this, never auto-commit to pass it.
 Do not start a watcher for a one-off task unless requested.
 
@@ -42,13 +48,17 @@ Never bypass built-in feature protection. Check consumers and remove stale route
 - Domain use cases may use Injectable. All business/UI dependencies use constructor injection, never GetIt lookup.
 - Data implements Domain contracts. Presentation depends on Domain, never Data.
 - Annotate use cases with `@lazySingleton`; BLoCs with `@injectable` (factory).
+- Keep each BLoC, its events, and its states in separate `*_bloc.dart`,
+  `*_event.dart`, and `*_state.dart` files.
 - Each dependency-owning package has `lib/di/<package>_di.dart` using `@InjectableInit.microPackage()`.
 - Keep `throwOnMissingDependencies: true`; ignore only explicitly documented externally supplied types.
 - Generated `.module.dart` owns internal registration. App DI selects modules, not repeated constructor bindings.
 - Set `includeMicroPackages: false` in app initializers; await selected modules after shared bootstrap.
 - App supplies provider configuration, storage and callbacks. Use typed `@factoryParam` callbacks for per-BLoC behavior.
 - Preserve lifetimes/disposal. Pages own factory BLoCs; do not turn them into singletons.
-- Environments are container-wide; do not mix different environment arguments across initializers on one container.
+- Use Injectable environments only for deployment/runtime environments, never
+  to select a repository or datasource. App DI binds repository interfaces to
+  concrete implementations explicitly.
 - Do not silently register fake providers, memory token storage, duplicate implementations or unrelated features.
 - Entities, DTOs and plain widgets need no DI. Do not create empty modules for symmetry.
 

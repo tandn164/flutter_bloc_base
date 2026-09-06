@@ -1,12 +1,19 @@
 import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:__name___domain/di/__name___domain_di.module.dart';
+import 'package:__name___domain/__name___domain.dart';
 import 'package:__name___data/di/__name___data_di.module.dart';
+import 'package:__name___data/__name___data.dart';
 import 'package:__name___presentation/di/__name___presentation_di.module.dart';
 import '__name___di.config.dart';
 
-Future<void> register__Pascal__Dependencies(GetIt sl, {String environment = 'local'}) =>
-    configure__Pascal__Dependencies(sl, environment: environment);
+Future<void> register__Pascal__Dependencies(GetIt sl) async {
+  await configure__Pascal__Dependencies(sl);
+  if (sl.isRegistered<__Pascal__Repository>()) return;
+  sl.registerLazySingleton<__Pascal__Repository>(
+    () => sl<__Pascal__RepositoryImpl>(),
+  );
+}
 
 @InjectableInit(
   initializerName: 'init__Pascal__Feature',
@@ -18,6 +25,6 @@ Future<void> register__Pascal__Dependencies(GetIt sl, {String environment = 'loc
     ExternalModule(__Pascal__PresentationPackageModule),
   ],
 )
-Future<void> configure__Pascal__Dependencies(GetIt container, {String environment = 'local'}) async {
-  await container.init__Pascal__Feature(environment: environment);
+Future<void> configure__Pascal__Dependencies(GetIt container) async {
+  await container.init__Pascal__Feature();
 }

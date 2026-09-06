@@ -62,9 +62,16 @@ link platform setup or auth guards.
 
 `make new-feature` creates entity, DTO, repository, use case, Freezed state, BLoC,
 injected page, tests, English README, and (when wired) feature-local DI/typed route.
-It resolves dependencies and runs codegen. `WIRE=0` skips app wiring;
+It resolves workspace dependencies, then runs codegen only for the three new
+packages (Domain, Data, Presentation) and the selected app, in that order.
+`WIRE=0` skips app wiring, localization and app codegen;
 `ROUTE_KIND=tab` adds a shell branch. Replace the empty repository implementation
 with your data source; test doubles are confined to tests.
+
+`make codegen APP=sample_app` remains the full-workspace command. Use it when
+other package outputs also need regeneration; new-feature does not repair missing
+or stale generated files in unrelated packages. App generation still covers the
+selected app's libraries, not only the newly added routes.
 
 ## Compatible versions
 

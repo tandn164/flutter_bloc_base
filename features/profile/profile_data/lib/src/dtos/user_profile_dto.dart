@@ -1,7 +1,8 @@
 import 'package:profile_domain/profile_domain.dart';
 
 class UserProfileDto {
-  const UserProfileDto({required this.id, required this.name, required this.email});
+  const UserProfileDto(
+      {required this.id, required this.name, required this.email});
 
   final String id;
   final String name;

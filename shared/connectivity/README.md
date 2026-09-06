@@ -19,12 +19,11 @@ dependencies:
 
 ## Quick start
 
-Register one implementation in the app composition root and share it with the
-API client, offline synchronizer, and app overlay.
+Register one implementation in the app composition root and share it with
+feature synchronizers and the app overlay.
 
 ```dart
 final connectivity = MyConnectivityAdapter();
-apiGateway = DataGateway(connectivity: connectivity, client: apiClient);
 overlay = AppOverlayController(connectivity: connectivity);
 ```
 

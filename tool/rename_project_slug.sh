@@ -62,7 +62,9 @@ info() { echo "==> $*"; }
 info "replace text references ${FROM_SLUG} → ${TO_SLUG}"
 python3 - <<'PY' "$ROOT" "$FROM_SLUG" "$TO_SLUG" "$FROM_CAMEL" "$TO_CAMEL" "$FROM_TITLE" "$TO_TITLE"
 import pathlib
+import os
 import sys
+import tempfile
 
 root = pathlib.Path(sys.argv[1])
 from_slug, to_slug = sys.argv[2], sys.argv[3]
@@ -136,7 +138,19 @@ for path in root.rglob("*"):
     for old, new in pairs:
         text = text.replace(old, new)
     if text != original:
-        path.write_text(text)
+        # Never truncate a script that Bash may still be reading. Replacing the
+        # inode atomically keeps the running shell on the original descriptor.
+        mode = path.stat().st_mode
+        with tempfile.NamedTemporaryFile(
+            mode="w",
+            encoding="utf-8",
+            dir=path.parent,
+            delete=False,
+        ) as temporary:
+            temporary.write(text)
+            temporary_path = pathlib.Path(temporary.name)
+        os.chmod(temporary_path, mode)
+        os.replace(temporary_path, path)
         changed += 1
 
 print(f"updated {changed} files")

@@ -1,0 +1,24 @@
+name: local_storage_drift
+description: Drift-backed KeyValueStore adapter for durable local application data.
+version: 1.0.0
+publish_to: "none"
+
+environment:
+  sdk: ^3.6.0
+  flutter: ">=3.16.0"
+resolution: workspace
+
+dependencies:
+  flutter:
+    sdk: flutter
+  drift: ^2.26.0
+  drift_flutter: ^0.2.4
+  local_storage:
+    path: ../../core
+
+dev_dependencies:
+  build_runner: ^2.4.13
+  drift_dev: ^2.26.0
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0

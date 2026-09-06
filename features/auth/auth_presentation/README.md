@@ -1,6 +1,8 @@
 # Auth Presentation
 
 Flutter pages and BLoCs for login, signup, and forgotten-password flows.
+Each BLoC keeps its implementation, events, and states in separate files under
+`lib/src/bloc/`.
 
 ## Usage
 
@@ -34,4 +36,4 @@ Classes use Injectable annotations and constructor injection. Generate
 The app selects this module explicitly; importing this package does not register
 anything. Direct constructor usage in existing tests remains supported.
 See the [DI guide](../../../tool/DEPENDENCY_INJECTION.md) for module order,
-external providers, callback factory parameters and environment selection.
+external providers, callback factory parameters and explicit app bindings.

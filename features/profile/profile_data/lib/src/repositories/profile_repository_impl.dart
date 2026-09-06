@@ -5,7 +5,7 @@ import 'package:profile_domain/profile_domain.dart';
 import '../api/profile_api.dart';
 import '../datasources/profile_network_ds.dart';
 
-@LazySingleton(as: ProfileRepository, env: ['remote'])
+@LazySingleton()
 class ProfileRepositoryImpl implements ProfileRepository {
   ProfileRepositoryImpl(ProfileApi api) : _network = ProfileNetworkDs(api);
 

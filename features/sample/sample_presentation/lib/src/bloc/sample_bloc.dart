@@ -1,89 +1,12 @@
 import 'package:injectable/injectable.dart';
-import 'package:equatable/equatable.dart';
 import 'package:sample_domain/sample_domain.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:freezed_annotation/freezed_annotation.dart';
 
-part 'sample_bloc.freezed.dart';
+import 'sample_event.dart';
+import 'sample_state.dart';
 
-enum SampleNoticeKind { success, error }
-
-class SampleNotice extends Equatable {
-  const SampleNotice({
-    required this.message,
-    required this.kind,
-    required this.id,
-  });
-
-  final String message;
-  final SampleNoticeKind kind;
-  final int id;
-
-  @override
-  List<Object?> get props => [message, kind, id];
-}
-
-sealed class SampleEvent extends Equatable {
-  const SampleEvent();
-  @override
-  List<Object?> get props => [];
-}
-
-class SampleStarted extends SampleEvent {
-  const SampleStarted();
-}
-
-class SampleRefreshed extends SampleEvent {
-  const SampleRefreshed();
-}
-
-class SampleLoadMore extends SampleEvent {
-  const SampleLoadMore();
-}
-
-class SampleCreated extends SampleEvent {
-  const SampleCreated(this.title);
-  final String title;
-  @override
-  List<Object?> get props => [title];
-}
-
-class SampleToggled extends SampleEvent {
-  const SampleToggled(this.id);
-  final String id;
-  @override
-  List<Object?> get props => [id];
-}
-
-class SampleRenamed extends SampleEvent {
-  const SampleRenamed(this.id, this.title);
-  final String id;
-  final String title;
-  @override
-  List<Object?> get props => [id, title];
-}
-
-class SampleDeleted extends SampleEvent {
-  const SampleDeleted(this.id);
-  final String id;
-  @override
-  List<Object?> get props => [id];
-}
-
-@freezed
-sealed class SampleState with _$SampleState {
-  const factory SampleState.loading({SampleNotice? notice}) = SampleLoading;
-  const factory SampleState.data(
-    List<SampleItem> items, {
-    @Default(false) bool hasMore,
-    @Default(false) bool loadingMore,
-    @Default(1) int page,
-    @Default(0) int generation,
-    SampleNotice? notice,
-  }) = SampleData;
-  const factory SampleState.error(String message, {SampleNotice? notice}) =
-      SampleError;
-}
+export 'sample_event.dart';
+export 'sample_state.dart';
 
 @injectable
 class SampleBloc extends Bloc<SampleEvent, SampleState> {

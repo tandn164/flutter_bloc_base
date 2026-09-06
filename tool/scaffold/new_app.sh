@@ -47,17 +47,24 @@ rsync -a \
   --exclude 'flutter_ffca_base.iml' \
   "$SRC_DIR/" "$DST_DIR/"
 
-info "set Dart package name to $NAME"
-python3 - <<'PY' "$DST_DIR/pubspec.yaml" "$NAME"
+info "replace app package and path references $SOURCE → $NAME"
+python3 - <<'PY' "$DST_DIR" "$SOURCE" "$NAME"
 import pathlib
-import re
 import sys
 
-path = pathlib.Path(sys.argv[1])
-name = sys.argv[2]
-text = path.read_text()
-text = re.sub(r'^name: .*$', f'name: {name}', text, count=1, flags=re.M)
-path.write_text(text)
+root = pathlib.Path(sys.argv[1])
+source = sys.argv[2]
+name = sys.argv[3]
+
+for path in root.rglob('*'):
+    if not path.is_file() or path.is_symlink():
+        continue
+    try:
+        text = path.read_text()
+    except (UnicodeDecodeError, OSError):
+        continue
+    if source in text:
+        path.write_text(text.replace(source, name))
 PY
 
 info "prepare per-flavor Firebase configuration folders"

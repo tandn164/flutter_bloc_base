@@ -3,7 +3,7 @@ import 'package:chopper/chopper.dart';
 
 part 'profile_api.chopper.dart';
 
-@LazySingleton(env: ['remote'])
+@LazySingleton()
 @ChopperApi()
 abstract class ProfileApi extends ChopperService {
   static const mePath = '/demo/me';
@@ -17,5 +17,7 @@ abstract class ProfileApi extends ChopperService {
   Future<Response<dynamic>> me();
 
   @PATCH(path: mePath)
-  Future<Response<dynamic>> updateMe(@Body() Map<String, dynamic> body);
+  Future<Response<dynamic>> updateMe(
+    @Body() Map<String, dynamic> body,
+  );
 }

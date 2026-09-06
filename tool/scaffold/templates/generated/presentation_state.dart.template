@@ -1,0 +1,12 @@
+import 'package:freezed_annotation/freezed_annotation.dart';
+import 'package:__name___domain/__name___domain.dart';
+
+part '__name___state.freezed.dart';
+
+@freezed
+sealed class __Pascal__State with _$__Pascal__State {
+  const factory __Pascal__State.loading() = __Pascal__Loading;
+  const factory __Pascal__State.data(List<__Pascal__Item> items) =
+      __Pascal__Data;
+  const factory __Pascal__State.error(String message) = __Pascal__Error;
+}

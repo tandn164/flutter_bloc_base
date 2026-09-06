@@ -15,6 +15,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   get_it: ^8.0.3
   injectable: ^2.5.0
+  chopper: ^8.1.0
   go_router: ^14.6.2
   intl: ^0.20.2
   shared_preferences: ^2.2.0
@@ -26,20 +27,32 @@ dependencies:
     path: ../../shared/tutorial_engine
   local_storage:
     path: ../../shared/local_storage/core
-  local_storage_shared_preferences:
-    path: ../../shared/local_storage/stores/shared_preferences
+  local_storage_drift:
+    path: ../../shared/local_storage/stores/drift
   ui_kit:
     path: ../../shared/ui_kit
   app_navigation:
     path: ../../shared/navigation
   app_logging:
     path: ../../shared/logging
-  sample_domain:
-    path: ../../features/sample/sample_domain
-  sample_data:
-    path: ../../features/sample/sample_data
-  sample_presentation:
-    path: ../../features/sample/sample_presentation
+  service_catalog_domain:
+    path: ../../features/service_catalog/service_catalog_domain
+  service_catalog_data:
+    path: ../../features/service_catalog/service_catalog_data
+  service_catalog_presentation:
+    path: ../../features/service_catalog/service_catalog_presentation
+  announcements_domain:
+    path: ../../features/announcements/announcements_domain
+  announcements_data:
+    path: ../../features/announcements/announcements_data
+  announcements_presentation:
+    path: ../../features/announcements/announcements_presentation
+  work_orders_domain:
+    path: ../../features/work_orders/work_orders_domain
+  work_orders_data:
+    path: ../../features/work_orders/work_orders_data
+  work_orders_presentation:
+    path: ../../features/work_orders/work_orders_presentation
   onboarding_domain:
     path: ../../features/onboarding/onboarding_domain
   onboarding_data:

@@ -27,7 +27,8 @@ class MemoryTokenVault implements TokenVault {
     required String accessToken,
     required String refreshToken,
   }) async {
-    _tokens = StoredTokens(accessToken: accessToken, refreshToken: refreshToken);
+    _tokens =
+        StoredTokens(accessToken: accessToken, refreshToken: refreshToken);
   }
 
   @override
@@ -51,7 +52,10 @@ class PrefsTokenVault implements TokenVault {
   Future<StoredTokens?> read() async {
     final access = _get(accessKey);
     final refresh = _get(refreshKey);
-    if (access == null || access.isEmpty || refresh == null || refresh.isEmpty) {
+    if (access == null ||
+        access.isEmpty ||
+        refresh == null ||
+        refresh.isEmpty) {
       return null;
     }
     return StoredTokens(accessToken: access, refreshToken: refresh);

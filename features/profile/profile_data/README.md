@@ -1,7 +1,12 @@
 # Profile Data
 
 Chopper API, DTO mapping, and repository implementation for `profile_domain`.
-The app creates the generated API service and injects its shared `DataGateway`.
+The package module creates the generated API service; the app provides
+`ChopperClient` configured by the app.
+
+Generated requests contain transport details only. Cache and offline behavior
+belong in the repository when the feature requires them. This reference profile
+implementation is remote-only.
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
@@ -18,4 +23,4 @@ Classes use Injectable annotations and constructor injection. Generate
 The app selects this module explicitly; importing this package does not register
 anything. Direct constructor usage in existing tests remains supported.
 See the [DI guide](../../../tool/DEPENDENCY_INJECTION.md) for module order,
-external providers, callback factory parameters and environment selection.
+external providers, callback factory parameters and explicit app bindings.

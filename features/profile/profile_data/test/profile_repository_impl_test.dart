@@ -23,39 +23,39 @@ class _Transport implements ApiTransport {
 }
 
 void main() {
-  test('remote module wires API, datasource and repository', () async {
+  test('package module wires concrete API, datasource and repository',
+      () async {
     final sl = GetIt.asNewInstance();
     final transport = _Transport();
     final client = ChopperClient(
       baseUrl: Uri.parse('http://local'),
-      client: ApiHttpClient(ApiClient(transport: transport)),
+      client: ChopperApiTransportAdapter(ApiClient(transport: transport)),
       converter: const JsonConverter(),
       errorConverter: const JsonConverter(),
     );
     addTearDown(client.dispose);
     addTearDown(sl.reset);
     sl.registerSingleton<ChopperClient>(client);
-    await ProfileDataPackageModule()
-        .init(GetItHelper(sl, 'remote'));
-    final repository = sl<ProfileRepository>();
-    expect(repository, same(sl<ProfileRepository>()));
+    await ProfileDataPackageModule().init(GetItHelper(sl));
+    final repository = sl<ProfileRepositoryImpl>();
+    expect(repository, same(sl<ProfileRepositoryImpl>()));
     final result = await repository.me();
     expect(result, isA<Ok>());
   });
 
-  test('custom environment does not install remote providers', () async {
+  test('package module leaves product contracts for app binding', () async {
     final sl = GetIt.asNewInstance();
     addTearDown(sl.reset);
-    await ProfileDataPackageModule()
-        .init(GetItHelper(sl, 'custom'));
+    await ProfileDataPackageModule().init(GetItHelper(sl));
     expect(sl.isRegistered<ProfileRepository>(), isFalse);
-    expect(sl.isRegistered<ProfileApi>(), isFalse);
+    expect(sl.isRegistered<ProfileRepositoryImpl>(), isTrue);
+    expect(sl.isRegistered<ProfileApi>(), isTrue);
   });
   test('ProfileRepositoryImpl me goes through ProfileApi', () async {
     final client = ApiClient(transport: _Transport());
     final chopper = ChopperClient(
       baseUrl: Uri.parse('http://local'),
-      client: ApiHttpClient(client),
+      client: ChopperApiTransportAdapter(client),
       converter: const JsonConverter(),
       errorConverter: const JsonConverter(),
       services: [ProfileApi.create()],

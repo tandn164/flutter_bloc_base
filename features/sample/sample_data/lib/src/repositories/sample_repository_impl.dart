@@ -6,43 +6,25 @@ import 'package:sample_domain/sample_domain.dart';
 import '../api/sample_api.dart';
 import '../dtos/sample_item_dto.dart';
 
-/// Sample reads go through [DataGateway] so cache/TTL/offline follow [RequestPolicy].
-/// Path comes from [SampleApi] (Chopper).
-@LazySingleton(as: SampleRepository, env: ['remote'])
+@LazySingleton()
 class SampleRepositoryImpl implements SampleRepository {
-  SampleRepositoryImpl({
-    required this.gateway,
-    this.policy = const RequestPolicy(
-      read: ReadStrategy.cacheFirst,
-      ttl: Duration(minutes: 2),
-    ),
-    String Function()? operationId,
-  }) : operationId = operationId ?? _nextOperationId;
+  SampleRepositoryImpl({required this.api});
 
   @factoryMethod
-  static SampleRepositoryImpl create(DataGateway gateway) =>
-      SampleRepositoryImpl(gateway: gateway);
+  static SampleRepositoryImpl create(SampleApi api) =>
+      SampleRepositoryImpl(api: api);
 
-  final DataGateway gateway;
-  final RequestPolicy policy;
-  final String Function() operationId;
+  final SampleApi api;
 
   @override
   Future<Result<SampleChunk>> getSample(
       {int page = 1, bool forceNetwork = false}) {
-    return gateway.read(
-      path: SampleApi.samplePath,
-      query: {
-        'page': '$page',
-        'limit': '${SampleRepository.pageSize}',
-      },
-      policy: RequestPolicy(
-        read: forceNetwork ? ReadStrategy.networkOnly : policy.read,
-        ttl: policy.ttl,
-        retryOnReconnect: policy.retryOnReconnect,
-        idempotencyKey: policy.idempotencyKey,
+    return chopperResult(
+      () => api.getSample(
+        page,
+        SampleRepository.pageSize,
       ),
-      decode: (json) {
+      (json) {
         final map = json as Map<String, dynamic>;
         return SampleChunk(
           items: [
@@ -56,18 +38,11 @@ class SampleRepositoryImpl implements SampleRepository {
 
   @override
   Future<Result<SampleItem>> createItem({required String title}) {
-    return gateway.write(
-      request: ApiRequest(
-        method: 'POST',
-        path: SampleApi.samplePath,
-        body: {'title': title},
-        policy: RequestPolicy(
-          retryOnReconnect: true,
-          idempotencyKey: operationId(),
-        ),
+    return chopperResult(
+      () => api.createSample(
+        {'title': title},
       ),
-      decode: _item,
-      invalidatePaths: [SampleApi.samplePath],
+      _item,
     );
   }
 
@@ -77,48 +52,29 @@ class SampleRepositoryImpl implements SampleRepository {
     String? title,
     bool? done,
   }) {
-    return gateway.write(
-      request: ApiRequest(
-        method: 'PATCH',
-        path: SampleApi.itemPath(id),
-        body: {
+    return chopperResult(
+      () => api.updateSample(
+        id,
+        {
           if (title != null) 'title': title,
           if (done != null) 'done': done,
         },
-        policy: RequestPolicy(
-          retryOnReconnect: true,
-          idempotencyKey: operationId(),
-        ),
       ),
-      decode: _item,
-      invalidatePaths: [SampleApi.samplePath],
+      _item,
     );
   }
 
   @override
   Future<Result<SampleItem>> deleteItem({required String id}) {
-    return gateway.write(
-      request: ApiRequest(
-        method: 'DELETE',
-        path: SampleApi.itemPath(id),
-        policy: RequestPolicy(
-          retryOnReconnect: true,
-          idempotencyKey: operationId(),
-        ),
+    return chopperResult(
+      () => api.deleteSample(
+        id,
       ),
-      decode: _item,
-      invalidatePaths: [SampleApi.samplePath],
+      _item,
     );
   }
 
   static SampleItem _item(Object json) {
     return SampleItemDto.fromJson(json as Map<String, dynamic>).toEntity();
   }
-}
-
-var _operationSequence = 0;
-
-String _nextOperationId() {
-  final timestamp = DateTime.now().microsecondsSinceEpoch;
-  return 'sample-$timestamp-${_operationSequence++}';
 }

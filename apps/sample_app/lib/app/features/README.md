@@ -66,7 +66,8 @@ factories; page callbacks resolve them and BlocProvider owns their disposal.
 Onboarding has no BLoC dependency to register in Presentation. Showcase uses only
 app services and therefore has no DI module.
 
-The default `local` environment selects package repositories. For a custom
-repository, register the contract first and use `environment: 'custom'`.
+App DI selects concrete repositories explicitly. Sample uses the typed
+`SampleRepositorySource`; to supply a custom repository, register its domain
+contract before calling the feature initializer.
 See the [DI guide](../../../../../tool/DEPENDENCY_INJECTION.md) for examples,
 package layout, external contracts and lifetime rules.

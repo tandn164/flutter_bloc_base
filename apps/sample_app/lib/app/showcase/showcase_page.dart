@@ -171,11 +171,11 @@ class _ShowcasePageState extends State<ShowcasePage> {
                 OutlinedButton(
                   onPressed: () {
                     final location = locationFromPayload(
-                      const {'path': '/sample'},
+                      const {'path': '/work-orders'},
                     );
                     if (location != null) widget.openLocation(location);
                   },
-                  child: const Text('Open sample deep link'),
+                  child: const Text('Open work orders deep link'),
                 ),
                 OutlinedButton(
                   onPressed: () =>

@@ -21,11 +21,17 @@ Reusable behavior must be added to `features/`, `shared/`, or a real
 make run APP=sample_app FLAVOR=dev
 ```
 
-The **Capabilities** tab triggers overlays, connectivity policies, skeletons,
-validation, logs, deep links, and onboarding. The **Sample list** tab is the
-exception: it is a complete feature-first clean architecture example with BLoC,
-pagination, pull-to-refresh, and optimistic mutations. It uses a deterministic
-local repository rather than pretending to be a backend.
+The **Capabilities** tab triggers shared UI and infrastructure. Three Field
+Operations features demonstrate distinct data strategies:
+
+- **Service catalog:** remote-only; every load calls the provider.
+- **Announcements:** remote datasource with a configurable 10-minute memory cache.
+- **Work orders:** Drift-backed local source of truth, optimistic writes and synchronization.
+
+`FieldOperationsSampleApi` is an app-owned, in-process backend simulator. It is
+registered against datasource contracts in `app/di.dart`; feature packages do
+not know about it. Product apps replace these registrations with Chopper,
+Firestore or another provider adapter.
 
 ## Feature selection
 
@@ -39,9 +45,7 @@ Each feature has one folder under `lib/app/features/<name>/`:
 - Generated `.config.dart` / `.g.dart` files live beside the source that owns them.
 
 See [feature wiring](lib/app/features/README.md) for the current layout and usage.
-Real providers belong in app composition or an
-`integrations/` adapter; the sample app does not silently replace them with
-fake implementations.
+Real providers belong in app composition or an `integrations/` adapter.
 
 ## Firebase configuration
 

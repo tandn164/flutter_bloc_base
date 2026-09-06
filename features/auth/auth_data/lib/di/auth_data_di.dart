@@ -9,6 +9,7 @@ import '../auth_data.dart';
     ChopperClient,
     ApiTransport,
     TokenVault,
+    TokenRefresher,
     AuthSessionConfig
   ],
 )

@@ -1,0 +1,20 @@
+name: service_catalog_domain
+description: Pure Dart service_catalog contracts and use cases.
+version: 1.0.0
+publish_to: "none"
+
+environment:
+  sdk: ^3.6.0
+resolution: workspace
+
+dev_dependencies:
+  build_runner: ^2.4.13
+  freezed: 3.0.6
+  injectable_generator: ^2.7.0
+  lints: ^6.0.0
+  test: ^1.25.0
+
+dependencies:
+  freezed_annotation: ^3.1.0
+  injectable: ^2.5.0
+  get_it: ^8.0.3

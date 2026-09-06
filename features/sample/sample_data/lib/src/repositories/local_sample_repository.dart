@@ -6,7 +6,7 @@ import 'package:sample_domain/sample_domain.dart';
 ///
 /// Product apps should bind [SampleRepository] to their own server or database
 /// implementation. This implementation deliberately has no HTTP dependency.
-@LazySingleton(as: SampleRepository, env: ['local'])
+@LazySingleton()
 class LocalSampleRepository implements SampleRepository {
   LocalSampleRepository({
     this.latency = const Duration(milliseconds: 250),

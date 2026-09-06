@@ -19,12 +19,20 @@ final class _$SampleApi extends SampleApi {
   final Type definitionType = SampleApi;
 
   @override
-  Future<Response<dynamic>> getSample() {
+  Future<Response<dynamic>> getSample(
+    int page,
+    int limit,
+  ) {
     final Uri $url = Uri.parse('/sample/items');
+    final Map<String, dynamic> $params = <String, dynamic>{
+      'page': page,
+      'limit': limit,
+    };
     final Request $request = Request(
       'GET',
       $url,
       client.baseUrl,
+      parameters: $params,
     );
     return client.send<dynamic, dynamic>($request);
   }

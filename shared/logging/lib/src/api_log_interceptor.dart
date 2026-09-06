@@ -16,10 +16,7 @@ class ApiLogInterceptor implements ApiInterceptor {
       LogEvent(
         kind: 'api.request',
         message: '${request.method} ${request.path}',
-        fields: {
-          ...redactFields(request.headers),
-          if (request.policy.idempotencyKey != null) 'idempotent': 'true',
-        },
+        fields: redactFields(request.headers),
       ),
     );
     try {

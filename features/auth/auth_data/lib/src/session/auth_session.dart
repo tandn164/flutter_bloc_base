@@ -16,9 +16,9 @@ class AuthSessionConfig {
   final Duration restoreDelay;
 }
 
-void disposeAuthSession(Session session) => (session as AuthSession).dispose();
+void disposeAuthSession(AuthSession session) => session.dispose();
 
-@LazySingleton(as: Session, env: ['remote'], dispose: disposeAuthSession)
+@LazySingleton(dispose: disposeAuthSession)
 class AuthSession extends ChangeNotifier implements Session {
   AuthSession({
     required this.vault,

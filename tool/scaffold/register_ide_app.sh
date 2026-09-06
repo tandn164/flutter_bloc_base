@@ -137,6 +137,12 @@ else:
         list_el = ET.SubElement(modules_opt, "list")
 
 existing = {option.get("value") for option in list_el.findall("option")}
+root_modules = sorted(path.parent.parent.glob("*.iml"))
+for module in root_modules:
+    name = module.stem
+    if name not in existing:
+        ET.SubElement(list_el, "option", value=name)
+        existing.add(name)
 if app not in existing:
     ET.SubElement(list_el, "option", value=app)
 

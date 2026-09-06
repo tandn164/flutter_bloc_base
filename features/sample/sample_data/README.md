@@ -10,9 +10,11 @@ DTO-to-entity mapping stays explicit in `toEntity()`.
 the sample feature runnable. It performs pagination and mutations directly and
 does not pretend to be an HTTP server.
 
-The app injects `SampleApi`, `DataGateway`, and an operation-ID factory. Mutation
-requests use stable idempotency keys when offline retry is enabled, so the server
-must deduplicate repeated keys.
+The package module creates `SampleApi`; the app provides a
+`ChopperClient`. Endpoints contain transport details only, while repositories
+own any cache or offline decision. This legacy sample repository calls remote
+endpoints directly; use the three Field Operations references for current data
+strategy examples.
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
